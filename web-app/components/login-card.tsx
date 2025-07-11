@@ -45,7 +45,7 @@ export function LoginCard() {
         } else {
             router.push("/dashboard");
         }
-        
+
         setEmail("");
         setPassword("");
     } catch (err) {
@@ -60,12 +60,13 @@ export function LoginCard() {
   };
 
   return (
-    <Card className="w-full max-w-sm bg-neutral-800 text-white p-2">
+    <Card className="w-full max-w-sm bg-neutral-800 text-white p-2 justify-between">
       <CardHeader>
         <CardTitle>Login to your account</CardTitle>
         <CardDescription>
           Enter your email below to login to your account
         </CardDescription>
+        <Button className="bg-white hover:bg-white/80 text-black text-center" onClick={() => router.push("/signup")}>Sign Up?</Button>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="flex flex-col gap-6">
