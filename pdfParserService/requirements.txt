@@ -1,3 +1,5 @@
-fastapi
-docling
-uvicorn
+flask
+werkzeug
+pdfplumber
+pytesseract
+Pillow
