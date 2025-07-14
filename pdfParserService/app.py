@@ -9,7 +9,6 @@ def format_table_cell(cell):
 
 def convert_pdf_to_markdown(pdf_path):
     try:
-        # Test if tesseract is installed
         pytesseract.get_tesseract_version()
     except Exception as e:
         print("Tesseract is not properly installed. OCR functionality will not work.")
@@ -28,7 +27,6 @@ def convert_pdf_to_markdown(pdf_path):
             tables = page.extract_tables()
             for table in tables:
                 if table and len(table) > 0:
-                    # Get maximum width for each column
                     col_widths = []
                     for col in range(len(table[0])):
                         col_width = max(len(str(row[col] or "")) for row in table)
@@ -54,11 +52,3 @@ def convert_pdf_to_markdown(pdf_path):
                 markdown += f"### OCR Error\nFailed to perform OCR on page {i+1}: {str(e)}\n\n"
     
     return markdown
-
-def main():
-    pdf_path = '../../../Downloads/LIC_Nivesh-Plus_Brochure_9-inch-x-8-inch_Eng_Single-pages-(2).pdf'  # Replace with your PDF file path
-    markdown_content = convert_pdf_to_markdown(pdf_path)
-    print(markdown_content)
-
-if __name__ == '__main__':
-    main()
