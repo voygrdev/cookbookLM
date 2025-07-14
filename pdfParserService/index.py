@@ -5,7 +5,6 @@ from app import convert_pdf_to_markdown
 
 app = Flask(__name__)
 
-# Configure upload folder
 UPLOAD_FOLDER = 'uploads'
 ALLOWED_EXTENSIONS = {'pdf'}
 
@@ -33,10 +32,8 @@ def parse_pdfs():
             filename = secure_filename(file.filename)
             filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             try:
-                # Save the uploaded file
                 file.save(filepath)
                 
-                # Convert the PDF to markdown using the function from app.py
                 markdown_content = convert_pdf_to_markdown(filepath)
                 results.append({
                     'filename': filename,
@@ -50,7 +47,6 @@ def parse_pdfs():
                     'status': 'error'
                 })
             finally:
-                # Clean up the uploaded file whether successful or not
                 if os.path.exists(filepath):
                     os.remove(filepath)
         else:
