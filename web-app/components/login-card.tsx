@@ -32,10 +32,8 @@ export function LoginCard() {
     setIsLoading(true);
 
     try {
-      // Zod validation
       loginSchema.parse({ email, password });
 
-      // Server action
       const response = await loginUser({ email, password });
 
       if (response.error) {
