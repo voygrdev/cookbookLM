@@ -6,7 +6,6 @@ export async function getUserNotebooks() {
   const supabase = await createClient();
 
   try {
-    // Get the current user's email
     const userData = await supabase.auth.getUser();
     const userEmail = userData.data.user?.email || "";
 
@@ -14,7 +13,6 @@ export async function getUserNotebooks() {
       return { success: false, error: "No user email found" };
     }
 
-    // Fetch notebooks for the user
     const response = await fetch(
       `${
         process.env.DEVELOPMENT_URL || ""

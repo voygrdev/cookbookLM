@@ -44,7 +44,6 @@ export const loginUser = async ({
     };
   }
 
-  // User successfully logged in
   return {
     success: true,
     message: "Login successful",
