@@ -1,4 +1,4 @@
-"use client"
+"use client";
 import { Card } from "@/components/ui/card";
 import { useEffect, useState } from "react";
 
@@ -15,12 +15,12 @@ export default function AddNotebookCard() {
       try {
         setLoading(true);
 
-       const result = await getUserNotebooks();
-       if (result.success) {
-         setNotebooks(result.data);
-       } else {
-         console.error("Failed to fetch notebooks:", result.error);
-       }
+        const result = await getUserNotebooks();
+        if (result.success) {
+          setNotebooks(result.data);
+        } else {
+          console.error("Failed to fetch notebooks:", result.error);
+        }
       } catch (error) {
         console.error("Error fetching notebooks:", error);
       } finally {

@@ -2,7 +2,6 @@
 import { createClient } from "@/middlewares/supabase/server";
 import { loginSchema } from "@/schema/loginSchema";
 
-
 export const loginUser = async ({
   email,
   password,

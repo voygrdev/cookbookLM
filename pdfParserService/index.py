@@ -20,20 +20,20 @@ def allowed_file(filename):
 def parse_pdfs():
     if 'files' not in request.files:
         return jsonify({'error': 'No files provided'}), 400
-    
+
     files = request.files.getlist('files')
-    
+
     if not files or files[0].filename == '':
         return jsonify({'error': 'No selected files'}), 400
 
     results = []
     for file in files:
-        if file and allowed_file(file.filename):
+        if file and file.filename and allowed_file(file.filename):
             filename = secure_filename(file.filename)
             filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             try:
                 file.save(filepath)
-                
+                print (f"File saved to {filepath}     "    )
                 markdown_content = convert_pdf_to_markdown(filepath)
                 results.append({
                     'filename': filename,
@@ -51,7 +51,7 @@ def parse_pdfs():
                     os.remove(filepath)
         else:
             results.append({
-                'filename': file.filename if file else 'unknown',
+                'filename': file.filename if file and file.filename else 'unknown',
                 'error': 'Invalid file type. Only PDF files are allowed.',
                 'status': 'error'
             })
