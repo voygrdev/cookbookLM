@@ -39,7 +39,7 @@ export function LoginCard() {
       if (response.error) {
         setError(response.message);
       } else {
-        router.push("/dashboard");
+        router.push("/");
       }
     } catch (err) {
       if (err instanceof z.ZodError) {
