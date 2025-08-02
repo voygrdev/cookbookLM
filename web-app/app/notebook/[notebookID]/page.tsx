@@ -1,11 +1,10 @@
-import MainNotebook  from "@/components/mainnotebook";
+import ChatWindow from "@/components/chat";
+
 
 export default function NotebookSlug() {
   return (
     <div className="flex flex-row  h-screen bg-black">
-      <MainNotebook />
+    <ChatWindow/>
     </div>
-
   );
 }
-
