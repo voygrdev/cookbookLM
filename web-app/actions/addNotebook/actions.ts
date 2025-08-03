@@ -9,7 +9,7 @@ export async function addNotebook(name: string) {
 
   try {
     const response = await fetch(
-      process.env.DEVELOPMENT_URL + "/api/notebook/add/",
+      `${process.env.DEVELOPMENT_URL}/api/notebook/add/`,
       {
         method: "POST",
         headers: {

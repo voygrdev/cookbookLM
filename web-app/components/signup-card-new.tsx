@@ -53,7 +53,8 @@ export function SignUpCard() {
         });
       } else {
         toast.success("Account created successfully!", {
-          description: "Please check your email to verify your account, then sign in.",
+          description:
+            "Please check your email to verify your account, then sign in.",
         });
         router.push("/login");
       }
@@ -92,7 +93,7 @@ export function SignUpCard() {
           Enter your details to create your new account
         </CardDescription>
       </CardHeader>
-      
+
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">
           {error && (
@@ -101,7 +102,7 @@ export function SignUpCard() {
               <span>{error}</span>
             </div>
           )}
-          
+
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <Input
@@ -114,7 +115,7 @@ export function SignUpCard() {
               disabled={isLoading}
             />
           </div>
-          
+
           <div className="space-y-2">
             <Label htmlFor="password">Password</Label>
             <Input
@@ -141,13 +142,9 @@ export function SignUpCard() {
             />
           </div>
         </CardContent>
-        
+
         <CardFooter className="flex flex-col space-y-4">
-          <Button
-            type="submit"
-            className="w-full"
-            disabled={isLoading}
-          >
+          <Button type="submit" className="w-full" disabled={isLoading}>
             {isLoading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -160,7 +157,7 @@ export function SignUpCard() {
               </>
             )}
           </Button>
-          
+
           <div className="text-center text-sm text-muted-foreground">
             Already have an account?{" "}
             <Link

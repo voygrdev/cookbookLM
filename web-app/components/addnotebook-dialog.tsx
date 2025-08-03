@@ -10,41 +10,64 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 
-export function DialogDemo() {
+interface DialogDemoProps {
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  onSuccess?: () => void;
+}
+
+export function DialogDemo({ open, onOpenChange, onSuccess }: DialogDemoProps) {
   const [name, setName] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
   const [error, setError] = useState("");
+
+  const isOpen = open !== undefined ? open : internalOpen;
+  const setIsOpen = onOpenChange !== undefined ? onOpenChange : setInternalOpen;
+
+  useEffect(() => {
+    if (!isOpen) {
+      setName("");
+      setError("");
+      setIsSubmitting(false);
+    }
+  }, [isOpen]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     setError("");
+
     try {
       const response = await addNotebook(name);
       if (!response.success) {
         throw new Error(response.data?.error || "Failed to create notebook");
       }
 
-      toast.success("Success", {
-        description: "Notebook created successfully!",
+      toast.success("Notebook created successfully", {
+        description: `"${name}" has been created and is ready to use.`,
       });
 
       console.log("Notebook created:", response.data);
       setName("");
-      setOpen(false);
+      setIsOpen(false);
+
+      if (onSuccess) {
+        onSuccess();
+      }
     } catch (error) {
       console.error("Error creating notebook:", error);
-      setError(error instanceof Error ? error.message : "An unknown error occurred");
-      toast.error("Error", {
-        description: error instanceof Error ? error.message : "An unknown error occurred",
+      const errorMessage =
+        error instanceof Error ? error.message : "An unknown error occurred";
+      setError(errorMessage);
+      toast.error("Failed to create notebook", {
+        description: errorMessage,
       });
     } finally {
       setIsSubmitting(false);
@@ -52,52 +75,49 @@ export function DialogDemo() {
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="outline" className="mt-6 bg-neutral-900 text-white border border-neutral-700 hover:bg-neutral-800">
-          Add Notebook
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px] bg-neutral-900 text-white border border-neutral-700">
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogContent className="sm:max-w-[425px]">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
-            <DialogTitle className="text-2xl">Add Notebook</DialogTitle>
-            <DialogDescription className="text-neutral-400">
-              Create a new notebook by giving it a name.
+            <DialogTitle className="text-2xl">Create New Notebook</DialogTitle>
+            <DialogDescription>
+              Give your notebook a name to get started organizing your
+              documents.
             </DialogDescription>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
+
+          <div className="grid gap-4 py-6">
             <div className="grid gap-2">
-              <Label htmlFor="name" className="text-neutral-300">
-                Name
-              </Label>
+              <Label htmlFor="name">Notebook Name</Label>
               <Input
                 id="name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Enter notebook name"
+                placeholder="Enter a descriptive name..."
                 required
-                className="bg-neutral-800 border-neutral-600 text-white placeholder-neutral-500 focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                className="focus:ring-2 focus:ring-primary"
+                disabled={isSubmitting}
               />
             </div>
-            {error && <div className="text-red-500 text-sm">{error}</div>}
+            {error && (
+              <div className="text-sm text-destructive bg-destructive/10 p-3 rounded-md">
+                {error}
+              </div>
+            )}
           </div>
-          <DialogFooter>
+
+          <DialogFooter className="gap-2">
             <DialogClose asChild>
-              <Button
-                type="button"
-                variant="outline"
-                className="bg-red-500 text-white hover:bg-red-600 border-none"
-              >
+              <Button type="button" variant="outline" disabled={isSubmitting}>
                 Cancel
               </Button>
             </DialogClose>
             <Button
               type="submit"
-              className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-bold py-2 px-4 rounded-md transition duration-300 ease-in-out transform hover:scale-105"
-              disabled={isSubmitting}
+              disabled={isSubmitting || !name.trim()}
+              className="min-w-[100px]"
             >
-              {isSubmitting ? "Adding..." : "Add"}
+              {isSubmitting ? "Creating..." : "Create Notebook"}
             </Button>
           </DialogFooter>
         </form>
