@@ -18,6 +18,7 @@
     "@langchain/langgraph": "^0.3.7",
     "@langchain/langgraph-sdk": "^0.0.84",
     "@langchain/langgraph-supervisor": "^0.0.13",
+    "@langchain/ollama": "^0.2.3",
     "@langchain/openai": "^0.5.18",
     "@radix-ui/react-dialog": "^1.1.14",
     "@radix-ui/react-label": "^2.1.7",

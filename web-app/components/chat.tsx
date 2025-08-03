@@ -12,7 +12,11 @@ type Message = {
   timestamp: Date;
 };
 
-export default function ChatWindow() {
+interface ChatWindowProps {
+  notebookId: string;
+}
+
+export default function ChatWindow({ notebookId }: ChatWindowProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<
     Array<{ name: string; url: string }>
@@ -91,7 +95,7 @@ export default function ChatWindow() {
             formData.append("files", file);
           });
 
-          const summary = await processPDF(formData);
+          const summary = await processPDF(formData, notebookId);
           const summaryString =
             typeof summary === "string" ? summary : JSON.stringify(summary);
           setPdfSummary(summaryString);
@@ -115,7 +119,7 @@ export default function ChatWindow() {
         }
       }
     },
-    [fetchUploadedFiles]
+    [fetchUploadedFiles, notebookId]
   );
 
   const typeMessage = (text: string, callback: () => void) => {
@@ -123,7 +127,7 @@ export default function ChatWindow() {
     setTypingMessage("");
 
     let index = 0;
-    const typingSpeed = 10; 
+    const typingSpeed = 10;
 
     const typeNextChar = () => {
       if (index < text.length) {

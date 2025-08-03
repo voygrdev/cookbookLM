@@ -30,13 +30,11 @@ export async function sendChatMessage(
 
     const response = await llm.invoke(messages);
 
-    // Extract thinking content if it exists (for DeepSeek models)
     const responseContent = response.content;
     let thinkingContent = "";
     let finalResponse = responseContent;
 
     if (typeof responseContent === "string") {
-      // Look for thinking tags in the response
       const thinkingMatch = responseContent.match(/<think>([\s\S]*?)<\/think>/);
       if (thinkingMatch) {
         thinkingContent = thinkingMatch[1].trim();
