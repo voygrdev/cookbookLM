@@ -2,6 +2,7 @@
 
 import { STARTER_PROMPT_SUMMARY } from "@/lib/prompts";
 import { createClient } from "@/middlewares/supabase/server";
+import { SupabaseVectorStore } from "@/tools/vectorStore";
 import { ChatGroq } from "@langchain/groq";
 
 type ProcessedResult = {
@@ -14,7 +15,7 @@ type ProcessedResult = {
   uploadPath?: string;
 };
 
-export async function processPDF(formData: FormData) {
+export async function processPDF(formData: FormData, notebookId: string) {
   try {
     const supabase = await createClient();
     const files = formData.getAll("files") as File[];
@@ -87,6 +88,12 @@ export async function processPDF(formData: FormData) {
         uploadPath: uploadResult?.uploadPath,
       };
     });
+
+      console.log("Starting vector storage process...");
+      SupabaseVectorStore(
+        JSON.stringify(combinedContent),
+        notebookId
+      );
 
     const llmResponse = await llm.invoke([
       {
