@@ -14,9 +14,7 @@ export async function getUserNotebooks() {
     }
 
     const response = await fetch(
-      `${
-        process.env.DEVELOPMENT_URL || ""
-      }/api/notebook?email=${encodeURIComponent(userEmail)}`,
+      `${process.env.DEVELOPMENT_URL}/api/notebook?email=${encodeURIComponent(userEmail)}`,
       {
         headers: {
           "Content-Type": "application/json",
