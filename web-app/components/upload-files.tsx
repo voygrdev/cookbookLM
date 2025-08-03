@@ -4,7 +4,11 @@ import { useDropzone } from "react-dropzone";
 import { processPDF } from "../actions/processpdf/actions";
 import { createClient } from "@/middlewares/supabase/client";
 
-export default function UploadCard() {
+interface UploadCardProps {
+  notebookId?: string;
+}
+
+export default function UploadCard({ notebookId }: UploadCardProps) {
   const [files, setFiles] = useState<File[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [results, setResults] = useState<
@@ -74,8 +78,25 @@ export default function UploadCard() {
             formData.append("files", file);
           });
 
-          const processedResults = await processPDF(formData);
-          setResults(processedResults);
+          const processedResults = notebookId
+            ? await processPDF(formData, notebookId)
+            : "No notebook ID provided - vectors will not be stored";
+
+          if (typeof processedResults !== "string") {
+            setResults(
+              processedResults as Array<{
+                filename: string;
+                content?: string;
+                error?: string;
+                status: string;
+                uploadStatus?: string;
+                uploadError?: string;
+                uploadPath?: string;
+              }>
+            );
+          } else {
+            console.warn(processedResults);
+          }
 
           setTimeout(async () => {
             console.log("Refreshing uploaded files list...");
@@ -88,7 +109,7 @@ export default function UploadCard() {
         }
       }
     },
-    [fetchUploadedFiles]
+    [fetchUploadedFiles, notebookId]
   );
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -100,100 +121,100 @@ export default function UploadCard() {
 
   return (
     <div className="flex flex-col bg-neutral-900 w-[25%]  m-5 rounded-lg p-2 relative">
-        <div className="mt-2">
-          <div
-            {...getRootProps()}
-            className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors
+      <div className="mt-2">
+        <div
+          {...getRootProps()}
+          className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors
               ${
                 isDragActive
                   ? "border-blue-500 bg-blue-50/5"
                   : "border-gray-600 hover:border-gray-500"
               } ${isLoading ? "pointer-events-none opacity-50" : ""}`}
-          >
-            <input {...getInputProps()} disabled={isLoading} />
-            {isLoading ? (
-              <p className="text-gray-300">Processing PDFs...</p>
-            ) : isDragActive ? (
-              <p className="text-gray-300">Drop PDF files here...</p>
-            ) : (
-              <p className="text-gray-400">
-                Drag & drop PDF files here, or click to select files
-              </p>
-            )}
-          </div>
-
-          <div className="mt-4 space-y-6">
-            {(files.length > 0 || results.length > 0) && (
-              <div>
-                <h3 className="text-sm font-medium text-gray-300 mb-2">
-                  Processing Results:
-                </h3>
-                <ul className="space-y-2">
-                  {results.map((result, index) => (
-                    <li
-                      key={index}
-                      className={`text-sm ${
-                        result.status === "success" &&
-                        result.uploadStatus === "uploaded"
-                          ? "text-green-400"
-                          : "text-red-400"
-                      }`}
-                    >
-                      {result.filename} - Processing: {result.status}, Upload:{" "}
-                      {result.uploadStatus || "pending"}
-                      {result.error && (
-                        <p className="text-red-400 text-xs mt-1">
-                          Processing Error: {result.error}
-                        </p>
-                      )}
-                      {result.uploadError && (
-                        <p className="text-red-400 text-xs mt-1">
-                          Upload Error: {result.uploadError}
-                        </p>
-                      )}
-                      {result.content && (
-                        <div className="mt-2 text-gray-400 text-xs max-h-20 overflow-y-auto">
-                          {result.content.substring(0, 200)}...
-                        </div>
-                      )}
-                    </li>
-                  ))}
-                  {isLoading &&
-                    files.map((file, index) => (
-                      <li
-                        key={`loading-${index}`}
-                        className="text-sm text-gray-400"
-                      >
-                        {file.name} - Processing...
-                      </li>
-                    ))}
-                </ul>
-              </div>
-            )}
-
-            {uploadedFiles.length > 0 && (
-              <div>
-                <h3 className="text-sm font-medium text-gray-300 mb-2">
-                  Uploaded Files:
-                </h3>
-                <ul className="space-y-2">
-                  {uploadedFiles.map((file, index) => (
-                    <li key={index} className="text-sm text-gray-400">
-                      <a
-                        href={file.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="hover:text-blue-400 transition-colors"
-                      >
-                        {file.name}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </div>
+        >
+          <input {...getInputProps()} disabled={isLoading} />
+          {isLoading ? (
+            <p className="text-gray-300">Processing PDFs...</p>
+          ) : isDragActive ? (
+            <p className="text-gray-300">Drop PDF files here...</p>
+          ) : (
+            <p className="text-gray-400">
+              Drag & drop PDF files here, or click to select files
+            </p>
+          )}
         </div>
+
+        <div className="mt-4 space-y-6">
+          {(files.length > 0 || results.length > 0) && (
+            <div>
+              <h3 className="text-sm font-medium text-gray-300 mb-2">
+                Processing Results:
+              </h3>
+              <ul className="space-y-2">
+                {results.map((result, index) => (
+                  <li
+                    key={index}
+                    className={`text-sm ${
+                      result.status === "success" &&
+                      result.uploadStatus === "uploaded"
+                        ? "text-green-400"
+                        : "text-red-400"
+                    }`}
+                  >
+                    {result.filename} - Processing: {result.status}, Upload:{" "}
+                    {result.uploadStatus || "pending"}
+                    {result.error && (
+                      <p className="text-red-400 text-xs mt-1">
+                        Processing Error: {result.error}
+                      </p>
+                    )}
+                    {result.uploadError && (
+                      <p className="text-red-400 text-xs mt-1">
+                        Upload Error: {result.uploadError}
+                      </p>
+                    )}
+                    {result.content && (
+                      <div className="mt-2 text-gray-400 text-xs max-h-20 overflow-y-auto">
+                        {result.content.substring(0, 200)}...
+                      </div>
+                    )}
+                  </li>
+                ))}
+                {isLoading &&
+                  files.map((file, index) => (
+                    <li
+                      key={`loading-${index}`}
+                      className="text-sm text-gray-400"
+                    >
+                      {file.name} - Processing...
+                    </li>
+                  ))}
+              </ul>
+            </div>
+          )}
+
+          {uploadedFiles.length > 0 && (
+            <div>
+              <h3 className="text-sm font-medium text-gray-300 mb-2">
+                Uploaded Files:
+              </h3>
+              <ul className="space-y-2">
+                {uploadedFiles.map((file, index) => (
+                  <li key={index} className="text-sm text-gray-400">
+                    <a
+                      href={file.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="hover:text-blue-400 transition-colors"
+                    >
+                      {file.name}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
