@@ -16,8 +16,9 @@ import { loginUser } from "@/app/login/actions";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { z } from "zod";
-import { AnimatePresence, motion } from "framer-motion";
-import { AlertTriangle, LogIn } from "lucide-react";
+import { AlertTriangle, LogIn, Loader2, BookOpen } from "lucide-react";
+import { toast } from "sonner";
+import Link from "next/link";
 
 export function LoginCard() {
   const [email, setEmail] = useState("");
@@ -38,14 +39,28 @@ export function LoginCard() {
 
       if (response.error) {
         setError(response.message);
+        toast.error("Login failed", {
+          description: response.message,
+        });
       } else {
+        toast.success("Welcome back!", {
+          description: "You have been successfully signed in.",
+        });
         router.push("/");
       }
     } catch (err) {
       if (err instanceof z.ZodError) {
-        setError(err.issues[0].message);
+        const errorMessage = err.issues[0].message;
+        setError(errorMessage);
+        toast.error("Validation error", {
+          description: errorMessage,
+        });
       } else {
-        setError("An unexpected error occurred. Please try again.");
+        const errorMessage = "An unexpected error occurred. Please try again.";
+        setError(errorMessage);
+        toast.error("Error", {
+          description: errorMessage,
+        });
       }
     } finally {
       setIsLoading(false);
@@ -53,91 +68,84 @@ export function LoginCard() {
   };
 
   return (
-    <Card className="w-full max-w-sm border-neutral-700/60 bg-neutral-900/50 text-neutral-200 backdrop-blur-lg">
-      <CardHeader className="text-center">
-        <CardTitle className="text-2xl font-bold tracking-tight text-neutral-50">
-          Welcome Back
-        </CardTitle>
-        <CardDescription className="text-neutral-400">
-          Enter your credentials to access your account
+    <Card className="w-full">
+      <CardHeader className="space-y-1">
+        <div className="flex items-center justify-center mb-4">
+          <div className="flex items-center space-x-2">
+            <BookOpen className="h-6 w-6 text-primary" />
+            <span className="text-xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
+              CookbookLM
+            </span>
+          </div>
+        </div>
+        <CardTitle className="text-2xl text-center">Sign in</CardTitle>
+        <CardDescription className="text-center">
+          Enter your email and password to access your account
         </CardDescription>
       </CardHeader>
 
-      <CardContent>
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <AnimatePresence>
-            {error && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="flex items-center gap-3 rounded-lg border border-red-500/50 bg-red-500/10 p-3 text-sm text-red-400"
-              >
-                <AlertTriangle className="h-5 w-5 flex-shrink-0" />
-                <span>{error}</span>
-              </motion.div>
-            )}
-          </AnimatePresence>
+      <form onSubmit={handleSubmit}>
+        <CardContent className="space-y-4">
+          {error && (
+            <div className="flex items-center space-x-2 p-3 text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-md">
+              <AlertTriangle className="h-4 w-4 flex-shrink-0" />
+              <span>{error}</span>
+            </div>
+          )}
 
-          <div className="grid gap-2">
-            <Label htmlFor="email" className="text-neutral-400">
-              Email
-            </Label>
+          <div className="space-y-2">
+            <Label htmlFor="email">Email</Label>
             <Input
               id="email"
               type="email"
-              placeholder="m@example.com"
-              required
+              placeholder="Enter your email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              required
               disabled={isLoading}
-              className="border-neutral-700 bg-neutral-800/60 text-neutral-50 placeholder:text-neutral-500 focus-visible:ring-blue-500"
             />
           </div>
 
-          <div className="grid gap-2">
+          <div className="space-y-2">
             <Label htmlFor="password">Password</Label>
             <Input
               id="password"
               type="password"
-              required
+              placeholder="Enter your password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              required
               disabled={isLoading}
-              className="border-neutral-700 bg-neutral-800/60 text-neutral-50 focus-visible:ring-blue-500"
             />
           </div>
+        </CardContent>
 
-          <Button
-            type="submit"
-            className="mt-4 flex w-full items-center gap-2 bg-blue-600 font-semibold text-white transition-colors hover:bg-blue-700 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 disabled:cursor-not-allowed disabled:opacity-50"
-            disabled={isLoading}
-          >
+        <CardFooter className="flex flex-col space-y-4">
+          <Button type="submit" className="w-full" disabled={isLoading}>
             {isLoading ? (
-              "Logging in..."
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Signing in...
+              </>
             ) : (
               <>
-                <LogIn size={16} /> Login
+                <LogIn className="mr-2 h-4 w-4" />
+                Sign in
               </>
             )}
           </Button>
-        </form>
-      </CardContent>
 
-      <CardFooter className="justify-center">
-        <p className="text-center text-sm text-neutral-400">
-          {"Don't have an account? "}
-          <button
-            type="button"
-            onClick={() => router.push("/signup")}
-            disabled={isLoading}
-            className="font-semibold text-blue-500 transition-colors hover:text-blue-400 disabled:cursor-not-allowed disabled:opacity-70"
-          >
-            Sign Up
-          </button>
-        </p>
-      </CardFooter>
+          <div className="text-center text-sm text-muted-foreground">
+            Don&apos;t have an account?{" "}
+            <Link
+              href="/signup"
+              className="text-primary hover:underline font-medium"
+            >
+              Sign up
+            </Link>
+          </div>
+        </CardFooter>
+      </form>
     </Card>
   );
 }
-

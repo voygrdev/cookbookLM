@@ -1,6 +1,6 @@
 import Dashboard from "@/components/dashboard";
+import LandingPage from "@/components/landing-page";
 import { createClient } from "@/middlewares/supabase/server";
-import { redirect } from "next/navigation";
 
 export default async function Home() {
   const supabase = await createClient();
@@ -9,9 +9,8 @@ export default async function Home() {
   } = await supabase.auth.getSession();
 
   if (session?.user == null) {
-    redirect('/login');
+    return <LandingPage />;
   }
-  return (
-    <Dashboard />
-  );
+
+  return <Dashboard />;
 }

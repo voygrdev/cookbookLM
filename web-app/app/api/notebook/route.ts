@@ -74,3 +74,44 @@ export async function GET(request: NextRequest) {
     );
   }
 }
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const email = searchParams.get("email");
+    const notebookId = searchParams.get("notebookId");
+
+    if (!email || !notebookId) {
+      return NextResponse.json(
+        { error: "Email and notebookId parameters are required" },
+        { status: 400 }
+      );
+    }
+
+    const result = await Notebook.deleteOne({ 
+      uuid: notebookId, 
+      userEmail: email 
+    });
+
+    if (result.deletedCount === 0) {
+      return NextResponse.json(
+        { error: "Notebook not found or not authorized to delete" },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json(
+      {
+        success: true,
+        message: "Notebook deleted successfully",
+      },
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error("Error deleting notebook:", error);
+    return NextResponse.json(
+      { error: "Failed to delete notebook", details: (error as Error).message },
+      { status: 500 }
+    );
+  }
+}
