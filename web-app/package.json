@@ -31,6 +31,7 @@
     "@supabase/auth-helpers-nextjs": "^0.10.0",
     "@supabase/ssr": "^0.6.1",
     "@supabase/supabase-js": "^2.50.4",
+    "@tailwindcss/line-clamp": "^0.4.4",
     "@types/mongoose": "^5.11.97",
     "ai": "^4.3.19",
     "class-variance-authority": "^0.7.1",
