@@ -1,25 +1,38 @@
 "use server";
 
+import { SYSTEM_PROMPT } from "@/lib/prompts";
 import { ChatGroq } from "@langchain/groq";
+import { ChatOllama } from "@langchain/ollama";
 
 export async function sendChatMessage(
   message: string,
-  conversationHistory: Array<{ role: string; content: string }>
+  conversationHistory: Array<{ role: string; content: string }>,
+  provider: "groq" | "ollama" = "groq",
+  model: string = "deepseek-r1-distill-llama-70b"
 ) {
   try {
-    const llm = new ChatGroq({
-      model: "deepseek-r1-distill-llama-70b",
-      temperature: 0.1,
-      maxTokens: undefined,
-      maxRetries: 2,
-      apiKey: process.env.GROQ_API_KEY,
-    });
+    let llm;
+
+    if (provider === "groq") {
+      llm = new ChatGroq({
+        model: model,
+        temperature: 0.1,
+        maxTokens: undefined,
+        maxRetries: 2,
+        apiKey: process.env.GROQ_API_KEY,
+      });
+    } else {
+      llm = new ChatOllama({
+        model: model,
+        baseUrl: "http://localhost:11434",
+        temperature: 0.1,
+      });
+    }
 
     const messages = [
       {
         role: "system",
-        content:
-          "You are a helpful assistant that can answer questions about the PDF documents that were uploaded and summarized. Use the context from the previous conversation to provide accurate and helpful responses.",
+        content: SYSTEM_PROMPT.prompt,
       },
       ...conversationHistory,
       {
