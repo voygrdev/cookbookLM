@@ -45,7 +45,6 @@ export default function Dashboard() {
 
   const handleDeleteNotebook = async (uuid: string) => {
     setNotebooks((prev) => prev.filter((notebook) => notebook.uuid !== uuid));
-
   };
 
   const handleRefresh = () => {
@@ -53,51 +52,52 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
       <Header />
 
       <main className="container mx-auto px-6 py-8">
         <div className="space-y-8">
-          {/* Header Section */}
           <div className="space-y-2">
-            <h1 className="text-3xl font-bold tracking-tight">
+            <h1 className="text-3xl font-bold tracking-tight text-white">
               Your Notebooks
             </h1>
-            <p className="text-muted-foreground">
+            <p className="text-slate-300">
               Manage and organize your document collections
             </p>
           </div>
 
-          {/* Action Bar */}
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <Button
                 onClick={handleRefresh}
                 variant="outline"
                 disabled={loading}
+                className="border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white bg-slate-900/50"
               >
                 Refresh
               </Button>
             </div>
             <Button
               onClick={() => setDialogOpen(true)}
-              className="bg-primary hover:bg-primary/90"
+              className="bg-gradient-to-r from-blue-600 to-violet-600 hover:from-blue-700 hover:to-violet-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
             >
               <Plus className="mr-2 h-4 w-4" />
               New Notebook
             </Button>
           </div>
 
-          {/* Notebooks Grid */}
           {loading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {[...Array(8)].map((_, i) => (
-                <Card key={i} className="animate-pulse">
+                <Card
+                  key={i}
+                  className="animate-pulse bg-slate-900/50 border-slate-700/50 backdrop-blur-sm"
+                >
                   <CardContent className="p-6">
                     <div className="space-y-4">
-                      <div className="h-4 bg-muted rounded w-3/4"></div>
-                      <div className="h-3 bg-muted rounded w-full"></div>
-                      <div className="h-3 bg-muted rounded w-2/3"></div>
+                      <div className="h-4 bg-slate-700 rounded w-3/4"></div>
+                      <div className="h-3 bg-slate-700 rounded w-full"></div>
+                      <div className="h-3 bg-slate-700 rounded w-2/3"></div>
                     </div>
                   </CardContent>
                 </Card>
@@ -116,12 +116,14 @@ export default function Dashboard() {
           ) : (
             <div className="text-center py-16">
               <div className="space-y-4">
-                <div className="mx-auto w-24 h-24 bg-muted rounded-full flex items-center justify-center">
-                  <Plus className="h-12 w-12 text-muted-foreground" />
+                <div className="mx-auto w-24 h-24 bg-slate-800/50 rounded-full flex items-center justify-center backdrop-blur-sm border border-slate-700/50">
+                  <Plus className="h-12 w-12 text-slate-400" />
                 </div>
                 <div className="space-y-2">
-                  <h3 className="text-xl font-semibold">No notebooks yet</h3>
-                  <p className="text-muted-foreground max-w-sm mx-auto">
+                  <h3 className="text-xl font-semibold text-white">
+                    No notebooks yet
+                  </h3>
+                  <p className="text-slate-300 max-w-sm mx-auto">
                     Get started by creating your first notebook to organize your
                     documents
                   </p>
@@ -129,7 +131,7 @@ export default function Dashboard() {
                 <Button
                   onClick={() => setDialogOpen(true)}
                   size="lg"
-                  className="mt-4"
+                  className="mt-4 bg-gradient-to-r from-blue-600 to-violet-600 hover:from-blue-700 hover:to-violet-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
                 >
                   <Plus className="mr-2 h-4 w-4" />
                   Create your first notebook
@@ -140,7 +142,6 @@ export default function Dashboard() {
         </div>
       </main>
 
-      {/* Dialog for creating new notebook */}
       <DialogDemo
         open={dialogOpen}
         onOpenChange={setDialogOpen}

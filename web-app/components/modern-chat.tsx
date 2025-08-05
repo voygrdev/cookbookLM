@@ -28,7 +28,16 @@ import {
   Loader2,
   MessageSquare,
   FileText,
+  RotateCcw,
+  Sparkles,
+  BookOpen,
 } from "lucide-react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import rehypeHighlight from "rehype-highlight";
+import "highlight.js/styles/github.css";
+import Image from "next/image";
+import { motion } from "framer-motion";
 import { sendChatMessage } from "../actions/chat/actions";
 import { generateSummary } from "../actions/summary/actions";
 import { getOllamaModels } from "../actions/models/actions";
@@ -69,9 +78,13 @@ const ModernChat = forwardRef<ModernChatRef, ModernChatProps>(
     );
     const [executingTool, setExecutingTool] = useState<string | null>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
+    const [loadingWordIndex, setLoadingWordIndex] = useState(0);
     const [uploadedFiles, setUploadedFiles] = useState<
       Array<{ name: string; url: string }>
     >([]);
+
+    // Loading words that rotate while generating response
+    const loadingWords = ["Thinking", "Generating", "Processing", "Analyzing"];
 
     useImperativeHandle(ref, () => ({
       addSummaryMessage: (summary: string, filename: string) => {
@@ -94,6 +107,16 @@ const ModernChat = forwardRef<ModernChatRef, ModernChatProps>(
     useEffect(() => {
       scrollToBottom();
     }, [messages, isTyping, typingMessage]);
+
+    // Rotate loading words while chat is loading
+    useEffect(() => {
+      if (isChatLoading) {
+        const interval = setInterval(() => {
+          setLoadingWordIndex((prev) => (prev + 1) % loadingWords.length);
+        }, 800);
+        return () => clearInterval(interval);
+      }
+    }, [isChatLoading, loadingWords.length]);
 
     const fetchUploadedFiles = useCallback(async () => {
       const supabase = createClient();
@@ -160,7 +183,7 @@ const ModernChat = forwardRef<ModernChatRef, ModernChatProps>(
       setTypingMessage("");
 
       let index = 0;
-      const typingSpeed = 20;
+      const typingSpeed = 2; // Much faster typing speed
 
       const typeNextChar = () => {
         if (index < text.length) {
@@ -460,18 +483,81 @@ const ModernChat = forwardRef<ModernChatRef, ModernChatProps>(
       });
     };
 
+    // Company logo components using SVG files
+    const GroqLogo = () => (
+      <Image
+        src="/groq.svg"
+        alt="Groq"
+        width={16}
+        height={16}
+        className="rounded-sm dark:invert"
+      />
+    );
+
+    const DeepSeekLogo = () => (
+      <Image
+        src="/deepseek.svg"
+        alt="DeepSeek"
+        width={16}
+        height={16}
+        className="rounded-sm"
+      />
+    );
+
+    const OpenAILogo = () => (
+      <Image
+        src="/openai.svg"
+        alt="OpenAI"
+        width={16}
+        height={16}
+        className="rounded-sm dark:invert"
+      />
+    );
+
+    const LlamaLogo = () => (
+      <Image
+        src="/meta-color.svg"
+        alt="Meta Llama"
+        width={16}
+        height={16}
+        className="rounded-sm"
+      />
+    );
+
+    const QwenLogo = () => (
+      <Image
+        src="/qwen-color.svg"
+        alt="Qwen"
+        width={16}
+        height={16}
+        className="rounded-sm"
+      />
+    );
+
+    const OllamaLogo = () => (
+      <Image
+        src="/ollama.svg"
+        alt="Ollama"
+        width={16}
+        height={16}
+        className="rounded-sm dark:invert"
+      />
+    );
+
     return (
-      <div className="flex flex-col h-full bg-background overflow-hidden">
+      <div className="flex flex-col h-full bg-slate-950/70 overflow-hidden">
         {/* Chat Header */}
-        <div className="border-b border-border p-4 flex-shrink-0">
+        <div className="border-b border-slate-700/50 p-4 flex-shrink-0 bg-slate-900/80 backdrop-blur-sm">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
-                <MessageSquare className="h-4 w-4 text-primary" />
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-blue-500/20 to-violet-500/20">
+                <MessageSquare className="h-4 w-4 text-blue-400" />
               </div>
               <div>
-                <h2 className="font-semibold">Chat with Documents</h2>
-                <p className="text-sm text-muted-foreground">
+                <h2 className="font-semibold text-white">
+                  Chat with Documents
+                </h2>
+                <p className="text-sm text-slate-300">
                   {uploadedFiles.length > 0
                     ? `${uploadedFiles.length} document${
                         uploadedFiles.length > 1 ? "s" : ""
@@ -483,33 +569,79 @@ const ModernChat = forwardRef<ModernChatRef, ModernChatProps>(
             <div className="flex items-center space-x-2">
               {/* Provider Selection */}
               <Select value={provider} onValueChange={handleProviderChange}>
-                <SelectTrigger className="w-24">
+                <SelectTrigger className="w-28 h-9 bg-slate-800/80 border-slate-600/50 text-slate-200 hover:border-slate-500/70">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="groq">Groq</SelectItem>
-                  <SelectItem value="ollama">Ollama</SelectItem>
+                <SelectContent className="bg-slate-800 border-slate-600">
+                  <SelectItem
+                    value="groq"
+                    className="text-slate-200 hover:bg-slate-700/70 hover:text-white focus:bg-slate-700/70 focus:text-white"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <GroqLogo />
+                      <span>Groq</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem
+                    value="ollama"
+                    className="text-slate-200 hover:bg-slate-700/70 hover:text-white focus:bg-slate-700/70 focus:text-white"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <OllamaLogo />
+                      <span>Ollama</span>
+                    </div>
+                  </SelectItem>
                 </SelectContent>
               </Select>
 
               {/* Model Selection */}
               <Select value={model} onValueChange={handleModelChange}>
-                <SelectTrigger className="w-48">
+                <SelectTrigger className="w-60 h-9 bg-slate-800/80 border-slate-600/50 text-slate-200 hover:border-slate-500/70">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-slate-800 border-slate-600">
                   {provider === "groq" ? (
                     <>
-                      <SelectItem value="deepseek-r1-distill-llama-70b">
-                        DeepSeek R1 Distill Llama 70B
+                      <SelectItem
+                        value="deepseek-r1-distill-llama-70b"
+                        className="text-slate-200 hover:bg-slate-700/70 hover:text-white focus:bg-slate-700/70 focus:text-white"
+                      >
+                        <div className="flex items-center space-x-2 min-w-0">
+                          <DeepSeekLogo />
+                          <span className="truncate">
+                            DeepSeek R1 Distill Llama 70B
+                          </span>
+                        </div>
                       </SelectItem>
-                      <SelectItem value="openai/gpt-oss-120b">
-                        OpenAI GPT OSS 120B
+                      <SelectItem
+                        value="openai/gpt-oss-120b"
+                        className="text-slate-200 hover:bg-slate-700/70 hover:text-white focus:bg-slate-700/70 focus:text-white"
+                      >
+                        <div className="flex items-center space-x-2 min-w-0">
+                          <OpenAILogo />
+                          <span className="truncate">OpenAI GPT OSS 120B</span>
+                        </div>
                       </SelectItem>
-                      <SelectItem value="llama-3.3-70b-versatile">
-                        Llama 3.3 70B Versatile
+                      <SelectItem
+                        value="llama-3.3-70b-versatile"
+                        className="text-slate-200 hover:bg-slate-700/70 hover:text-white focus:bg-slate-700/70 focus:text-white"
+                      >
+                        <div className="flex items-center space-x-2 min-w-0">
+                          <LlamaLogo />
+                          <span className="truncate">
+                            Llama 3.3 70B Versatile
+                          </span>
+                        </div>
                       </SelectItem>
-                      <SelectItem value="qwen/qwen3-32b">Qwen3 32B</SelectItem>
+                      <SelectItem
+                        value="qwen/qwen3-32b"
+                        className="text-slate-200 hover:bg-slate-700/70 hover:text-white focus:bg-slate-700/70 focus:text-white"
+                      >
+                        <div className="flex items-center space-x-2 min-w-0">
+                          <QwenLogo />
+                          <span className="truncate">Qwen3 32B</span>
+                        </div>
+                      </SelectItem>
                     </>
                   ) : (
                     <>
@@ -517,12 +649,20 @@ const ModernChat = forwardRef<ModernChatRef, ModernChatProps>(
                         <SelectItem
                           key={ollamaModel.name}
                           value={ollamaModel.name}
+                          className="text-slate-200 hover:bg-slate-700/70 hover:text-white focus:bg-slate-700/70 focus:text-white"
                         >
-                          {ollamaModel.name}
+                          <div className="flex items-center space-x-2 min-w-0">
+                            <OllamaLogo />
+                            <span className="truncate">{ollamaModel.name}</span>
+                          </div>
                         </SelectItem>
                       ))}
                       {ollamaModels.length === 0 && (
-                        <SelectItem value="no-models-found" disabled>
+                        <SelectItem
+                          value="no-models-found"
+                          disabled
+                          className="text-slate-400"
+                        >
                           No models found
                         </SelectItem>
                       )}
@@ -536,8 +676,8 @@ const ModernChat = forwardRef<ModernChatRef, ModernChatProps>(
                   onClick={handleSummary}
                   disabled={isSummaryLoading || model === "no-models-found"}
                   variant="outline"
-                  size="sm"
-                  className="flex items-center space-x-2"
+                  size="default"
+                  className="flex items-center space-x-2 h-9 px-3 bg-transparent border-slate-600/50 text-slate-200 hover:bg-slate-800/50 hover:text-white hover:border-slate-500/70"
                 >
                   {isSummaryLoading ? (
                     <Loader2 className="h-3 w-3 animate-spin" />
@@ -552,15 +692,17 @@ const ModernChat = forwardRef<ModernChatRef, ModernChatProps>(
         </div>
 
         {/* Messages Area */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        <div className="flex-1 overflow-y-auto p-4 space-y-4 hide-scrollbar">
           {messages.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center space-y-4">
-              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted">
-                <MessageSquare className="h-8 w-8 text-muted-foreground" />
+              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-blue-500/20 to-violet-500/20 backdrop-blur-sm">
+                <MessageSquare className="h-8 w-8 text-blue-400" />
               </div>
               <div className="space-y-2">
-                <h3 className="text-lg font-semibold">Ready to chat!</h3>
-                <p className="text-muted-foreground max-w-sm">
+                <h3 className="text-lg font-semibold text-white">
+                  Ready to chat!
+                </h3>
+                <p className="text-slate-300 max-w-sm">
                   {uploadedFiles.length > 0
                     ? "Ask questions about your uploaded documents to get started."
                     : "Upload PDF documents from the sidebar to start chatting with them."}
@@ -586,14 +728,14 @@ const ModernChat = forwardRef<ModernChatRef, ModernChatProps>(
                       <div
                         className={`flex h-8 w-8 items-center justify-center rounded-full flex-shrink-0 ${
                           message.role === "user"
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-muted"
+                            ? "bg-gradient-to-r from-blue-600 to-violet-600"
+                            : "bg-slate-800/80 backdrop-blur-sm"
                         }`}
                       >
                         {message.role === "user" ? (
-                          <User className="h-4 w-4" />
+                          <User className="h-4 w-4 text-white" />
                         ) : (
-                          <Bot className="h-4 w-4" />
+                          <Bot className="h-4 w-4 text-blue-400" />
                         )}
                       </div>
 
@@ -611,34 +753,49 @@ const ModernChat = forwardRef<ModernChatRef, ModernChatProps>(
                                   )
                                 }
                               >
-                                <SelectTrigger className="w-32 h-6 text-xs">
+                                <SelectTrigger className="w-40 h-8 text-xs bg-blue-900/30 border-blue-600/30 text-blue-200 hover:bg-blue-800/40 hover:border-blue-500/50 rounded-lg">
                                   <SelectValue placeholder="Tools" />
                                 </SelectTrigger>
-                                <SelectContent>
+                                <SelectContent className="bg-blue-950/90 border-blue-600/30 rounded-lg backdrop-blur-sm">
                                   <SelectItem
                                     value="regenerate"
                                     disabled={executingTool === message.id}
+                                    className="text-blue-100 hover:bg-blue-800/50 hover:text-white rounded-md focus:bg-blue-800/50"
                                   >
-                                    {executingTool === message.id ? "🔄" : "🔄"}{" "}
-                                    Regenerate
+                                    <div className="flex items-center gap-2 whitespace-nowrap">
+                                      <RotateCcw className="h-3 w-3 flex-shrink-0" />
+                                      <span>Regenerate</span>
+                                    </div>
                                   </SelectItem>
                                   <SelectItem
                                     value="improve"
                                     disabled={executingTool === message.id}
+                                    className="text-blue-100 hover:bg-blue-800/50 hover:text-white rounded-md focus:bg-blue-800/50"
                                   >
-                                    ✨ Improve Answer
+                                    <div className="flex items-center gap-2 whitespace-nowrap">
+                                      <Sparkles className="h-3 w-3 flex-shrink-0" />
+                                      <span>Improve Answer</span>
+                                    </div>
                                   </SelectItem>
                                   <SelectItem
                                     value="simplify"
                                     disabled={executingTool === message.id}
+                                    className="text-blue-100 hover:bg-blue-800/50 hover:text-white rounded-md focus:bg-blue-800/50"
                                   >
-                                    📝 Simplify
+                                    <div className="flex items-center gap-2 whitespace-nowrap">
+                                      <FileText className="h-3 w-3 flex-shrink-0" />
+                                      <span>Simplify</span>
+                                    </div>
                                   </SelectItem>
                                   <SelectItem
                                     value="expand"
                                     disabled={executingTool === message.id}
+                                    className="text-blue-100 hover:bg-blue-800/50 hover:text-white rounded-md focus:bg-blue-800/50"
                                   >
-                                    📖 Expand Details
+                                    <div className="flex items-center gap-2 whitespace-nowrap">
+                                      <BookOpen className="h-3 w-3 flex-shrink-0" />
+                                      <span>Expand Details</span>
+                                    </div>
                                   </SelectItem>
                                 </SelectContent>
                               </Select>
@@ -648,37 +805,147 @@ const ModernChat = forwardRef<ModernChatRef, ModernChatProps>(
                         <Card
                           className={`${
                             message.role === "user"
-                              ? "bg-primary text-primary-foreground"
+                              ? "bg-gradient-to-r from-blue-600 to-violet-600 text-white border-blue-500/50"
                               : message.content.includes("Switched to")
-                              ? "bg-muted/50 border-muted"
-                              : ""
+                              ? "bg-slate-800/50 border-slate-700/50 backdrop-blur-sm"
+                              : "bg-slate-900/90 border-slate-700/50 backdrop-blur-sm"
                           }`}
                         >
                           <CardContent className="p-3">
-                            <div
-                              className={`whitespace-pre-wrap text-sm ${
-                                message.content.includes("Switched to")
-                                  ? "text-muted-foreground italic text-center"
-                                  : ""
-                              }`}
-                            >
-                              {message.content}
-                            </div>
+                            {message.role === "assistant" &&
+                            !message.content.includes("Switched to") ? (
+                              <div className="prose prose-sm dark:prose-invert max-w-none">
+                                <ReactMarkdown
+                                  remarkPlugins={[remarkGfm]}
+                                  rehypePlugins={[rehypeHighlight]}
+                                  components={{
+                                    h1: ({ children }) => (
+                                      <h1 className="text-lg font-bold mb-2 text-white">
+                                        {children}
+                                      </h1>
+                                    ),
+                                    h2: ({ children }) => (
+                                      <h2 className="text-base font-semibold mb-2 text-slate-100">
+                                        {children}
+                                      </h2>
+                                    ),
+                                    h3: ({ children }) => (
+                                      <h3 className="text-sm font-medium mb-1 text-slate-100">
+                                        {children}
+                                      </h3>
+                                    ),
+                                    p: ({ children }) => (
+                                      <p className="mb-2 last:mb-0 text-slate-200">
+                                        {children}
+                                      </p>
+                                    ),
+                                    ul: ({ children }) => (
+                                      <ul className="list-disc pl-4 mb-2 text-slate-200">
+                                        {children}
+                                      </ul>
+                                    ),
+                                    ol: ({ children }) => (
+                                      <ol className="list-decimal pl-4 mb-2 text-slate-200">
+                                        {children}
+                                      </ol>
+                                    ),
+                                    li: ({ children }) => (
+                                      <li className="mb-1 text-slate-200">
+                                        {children}
+                                      </li>
+                                    ),
+                                    code: ({ children, className }) => {
+                                      const isInline = !className;
+                                      return isInline ? (
+                                        <code className="bg-slate-800/60 px-1 py-0.5 rounded text-sm font-mono text-blue-200">
+                                          {children}
+                                        </code>
+                                      ) : (
+                                        <code className={className}>
+                                          {children}
+                                        </code>
+                                      );
+                                    },
+                                    pre: ({ children }) => (
+                                      <pre className="bg-slate-950/90 p-3 rounded-lg overflow-x-auto mb-2 border border-slate-700/50">
+                                        {children}
+                                      </pre>
+                                    ),
+                                    blockquote: ({ children }) => (
+                                      <blockquote className="border-l-4 border-blue-500 pl-4 italic mb-2 text-slate-300">
+                                        {children}
+                                      </blockquote>
+                                    ),
+                                    strong: ({ children }) => (
+                                      <strong className="font-semibold text-white">
+                                        {children}
+                                      </strong>
+                                    ),
+                                    em: ({ children }) => (
+                                      <em className="italic text-slate-100">
+                                        {children}
+                                      </em>
+                                    ),
+                                    a: ({ children, href }) => (
+                                      <a
+                                        href={href}
+                                        className="text-blue-400 underline hover:no-underline hover:text-blue-300"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                      >
+                                        {children}
+                                      </a>
+                                    ),
+                                    table: ({ children }) => (
+                                      <div className="overflow-x-auto mb-2">
+                                        <table className="min-w-full border border-slate-700/50">
+                                          {children}
+                                        </table>
+                                      </div>
+                                    ),
+                                    th: ({ children }) => (
+                                      <th className="border border-slate-700/50 px-2 py-1 bg-slate-800/50 font-semibold text-left text-slate-100">
+                                        {children}
+                                      </th>
+                                    ),
+                                    td: ({ children }) => (
+                                      <td className="border border-slate-700/50 px-2 py-1 text-slate-200">
+                                        {children}
+                                      </td>
+                                    ),
+                                  }}
+                                >
+                                  {message.content}
+                                </ReactMarkdown>
+                              </div>
+                            ) : (
+                              <div
+                                className={`whitespace-pre-wrap text-sm ${
+                                  message.content.includes("Switched to")
+                                    ? "text-slate-300 italic text-center"
+                                    : message.role === "user"
+                                    ? "text-white"
+                                    : "text-slate-200"
+                                }`}
+                              >
+                                {message.content}
+                              </div>
+                            )}
                           </CardContent>
                         </Card>
 
                         {message.thinking && (
-                          <Card className="bg-amber-50 border-amber-200 dark:bg-amber-950/20 dark:border-amber-800">
+                          <Card className="bg-amber-950/30 border-amber-700/50 backdrop-blur-sm">
                             <CardContent className="p-3">
                               <Button
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => toggleThinking(message.id)}
-                                className="w-full justify-between p-0 h-auto text-amber-700 dark:text-amber-300 hover:bg-transparent"
+                                className="w-full justify-between p-0 h-auto text-amber-300 hover:bg-transparent"
                               >
                                 <div className="flex items-center space-x-2">
                                   <div className="flex h-4 w-4 items-center justify-center">
-                                    <div className="h-2 w-2 bg-amber-500 rounded-full animate-pulse" />
+                                    <div className="h-2 w-2 bg-amber-400 rounded-full animate-pulse" />
                                   </div>
                                   <span className="text-xs font-medium">
                                     Reasoning process
@@ -693,8 +960,8 @@ const ModernChat = forwardRef<ModernChatRef, ModernChatProps>(
 
                               {showThinking[message.id] && (
                                 <>
-                                  <Separator className="my-2 bg-amber-200 dark:bg-amber-800" />
-                                  <div className="text-xs text-amber-800 dark:text-amber-200 whitespace-pre-wrap">
+                                  <Separator className="my-2 bg-amber-700/50" />
+                                  <div className="text-xs text-amber-200 whitespace-pre-wrap">
                                     {message.thinking}
                                   </div>
                                 </>
@@ -704,7 +971,7 @@ const ModernChat = forwardRef<ModernChatRef, ModernChatProps>(
                         )}
 
                         <div
-                          className={`text-xs text-muted-foreground ${
+                          className={`text-xs text-slate-500 ${
                             message.role === "user" ? "text-right" : ""
                           }`}
                         >
@@ -716,17 +983,38 @@ const ModernChat = forwardRef<ModernChatRef, ModernChatProps>(
                 </div>
               ))}
 
+              {/* Loading Component while generating response */}
+              {isChatLoading && (
+                <div className="flex justify-start">
+                  <div className="flex items-start space-x-3 max-w-[80%]">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-800/80 backdrop-blur-sm flex-shrink-0">
+                      <Bot className="h-4 w-4 text-blue-400" />
+                    </div>
+                    <Card className="bg-slate-900/90 border-slate-700/50 backdrop-blur-sm">
+                      <CardContent className="p-3">
+                        <div className="flex items-center space-x-2">
+                          <Loader2 className="h-4 w-4 animate-spin text-blue-400" />
+                          <span className="text-sm text-slate-200 font-medium">
+                            {loadingWords[loadingWordIndex]}...
+                          </span>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </div>
+              )}
+
               {isTyping && (
                 <div className="flex justify-start">
                   <div className="flex items-start space-x-3 max-w-[80%]">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted flex-shrink-0">
-                      <Bot className="h-4 w-4" />
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-800/80 backdrop-blur-sm flex-shrink-0">
+                      <Bot className="h-4 w-4 text-blue-400" />
                     </div>
-                    <Card>
+                    <Card className="bg-slate-900/90 border-slate-700/50 backdrop-blur-sm">
                       <CardContent className="p-3">
-                        <div className="whitespace-pre-wrap text-sm">
+                        <div className="whitespace-pre-wrap text-sm text-slate-200">
                           {typingMessage}
-                          <span className="inline-block w-0.5 h-4 bg-foreground animate-pulse ml-1" />
+                          <span className="inline-block w-0.5 h-4 bg-blue-400 animate-pulse ml-1" />
                         </div>
                       </CardContent>
                     </Card>
@@ -739,47 +1027,67 @@ const ModernChat = forwardRef<ModernChatRef, ModernChatProps>(
         </div>
 
         {/* Input Area */}
-        <div className="border-t border-border p-4 flex-shrink-0">
-          <div className="flex space-x-2">
-            <Input
-              type="text"
-              value={inputMessage}
-              onChange={(e) => setInputMessage(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder={
-                uploadedFiles.length > 0
-                  ? model === "no-models-found"
-                    ? "Please select a valid model first..."
-                    : "Ask a question about your documents..."
-                  : "Upload documents to start chatting..."
-              }
-              className="flex-1"
-              disabled={
-                isChatLoading ||
-                uploadedFiles.length === 0 ||
-                model === "no-models-found"
-              }
-            />
-            <Button
-              onClick={handleSendMessage}
-              disabled={
-                !inputMessage.trim() ||
-                isChatLoading ||
-                uploadedFiles.length === 0 ||
-                model === "no-models-found"
-              }
-              size="icon"
+        <div className="border-t border-slate-700/50 p-4 flex-shrink-0 bg-slate-900/80 backdrop-blur-sm">
+          <div className="flex space-x-3 items-end justify-center">
+            <motion.div
+              className="w-[60%]"
+              whileHover={{ scale: 1.02 }}
+              whileFocus={{ scale: 1.02 }}
+              transition={{ duration: 0.2 }}
             >
-              {isChatLoading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Send className="h-4 w-4" />
-              )}
-            </Button>
+              <motion.div
+                className="relative"
+                initial={{ width: "100%" }}
+                whileHover={{
+                  width: "100%",
+                  transition: { duration: 0.3, ease: "easeOut" },
+                }}
+              >
+                <div className="relative w-full">
+                  <Input
+                    type="text"
+                    value={inputMessage}
+                    onChange={(e) => setInputMessage(e.target.value)}
+                    onKeyPress={handleKeyPress}
+                    placeholder={
+                      uploadedFiles.length > 0
+                        ? model === "no-models-found"
+                          ? "Please select a valid model first..."
+                          : "Ask a question about your documents..."
+                        : "Upload documents to start chatting..."
+                    }
+                    className="h-12 bg-slate-800/80 border-slate-600/50 text-white placeholder:text-slate-400 focus:border-blue-500 focus:ring-blue-500/20 rounded-full pl-6 pr-12 py-3 transition-all duration-300 hover:bg-slate-700/80 hover:border-slate-500/70 w-full"
+                    disabled={
+                      isChatLoading ||
+                      uploadedFiles.length === 0 ||
+                      model === "no-models-found"
+                    }
+                  />
+                  <button
+                    type="button"
+                    onClick={handleSendMessage}
+                    disabled={
+                      !inputMessage.trim() ||
+                      isChatLoading ||
+                      uploadedFiles.length === 0 ||
+                      model === "no-models-found"
+                    }
+                    className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center justify-center h-9 w-9 rounded-full bg-gradient-to-r from-blue-600 to-violet-600 hover:from-blue-700 hover:to-violet-700 text-white shadow-lg transition-all duration-200 disabled:opacity-50 disabled:pointer-events-none"
+                    tabIndex={-1}
+                  >
+                    {isChatLoading ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Send className="h-4 w-4" />
+                    )}
+                  </button>
+                </div>
+              </motion.div>
+            </motion.div>
           </div>
 
           {uploadedFiles.length === 0 && (
-            <p className="text-xs text-muted-foreground mt-2 text-center">
+            <p className="text-xs text-slate-400 mt-2 text-center">
               Upload PDF documents from the sidebar to start chatting
             </p>
           )}

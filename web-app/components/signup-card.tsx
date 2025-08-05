@@ -53,7 +53,8 @@ export function SignUpCard() {
         });
       } else {
         toast.success("Account created successfully!", {
-          description: "Please check your email to verify your account, then sign in.",
+          description:
+            "Please check your email to verify your account, then sign in.",
         });
         router.push("/login");
       }
@@ -77,33 +78,37 @@ export function SignUpCard() {
   };
 
   return (
-    <Card className="w-full">
+    <Card className="w-full bg-slate-900/80 border-slate-700/50 backdrop-blur-sm">
       <CardHeader className="space-y-1">
         <div className="flex items-center justify-center mb-4">
           <div className="flex items-center space-x-2">
-            <BookOpen className="h-6 w-6 text-primary" />
-            <span className="text-xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
+            <BookOpen className="h-6 w-6 text-blue-400" />
+            <span className="text-xl font-bold bg-gradient-to-r from-blue-400 to-violet-500 bg-clip-text text-transparent">
               CookbookLM
             </span>
           </div>
         </div>
-        <CardTitle className="text-2xl text-center">Create account</CardTitle>
-        <CardDescription className="text-center">
+        <CardTitle className="text-2xl text-center text-white">
+          Create account
+        </CardTitle>
+        <CardDescription className="text-center text-slate-300">
           Enter your details to create your new account
         </CardDescription>
       </CardHeader>
-      
+
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">
           {error && (
-            <div className="flex items-center space-x-2 p-3 text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-md">
+            <div className="flex items-center space-x-2 p-3 text-sm text-red-400 bg-red-900/20 border border-red-800/50 rounded-md">
               <AlertTriangle className="h-4 w-4 flex-shrink-0" />
               <span>{error}</span>
             </div>
           )}
-          
+
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email" className="text-slate-200">
+              Email
+            </Label>
             <Input
               id="email"
               type="email"
@@ -112,11 +117,14 @@ export function SignUpCard() {
               onChange={(e) => setEmail(e.target.value)}
               required
               disabled={isLoading}
+              className="bg-slate-800/80 border-slate-600/50 text-white placeholder:text-slate-400"
             />
           </div>
-          
+
           <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
+            <Label htmlFor="password" className="text-slate-200">
+              Password
+            </Label>
             <Input
               id="password"
               type="password"
@@ -125,11 +133,14 @@ export function SignUpCard() {
               onChange={(e) => setPassword(e.target.value)}
               required
               disabled={isLoading}
+              className="bg-slate-800/80 border-slate-600/50 text-white placeholder:text-slate-400"
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="confirmPassword">Confirm Password</Label>
+            <Label htmlFor="confirmPassword" className="text-slate-200">
+              Confirm Password
+            </Label>
             <Input
               id="confirmPassword"
               type="password"
@@ -138,14 +149,15 @@ export function SignUpCard() {
               onChange={(e) => setConfirmPassword(e.target.value)}
               required
               disabled={isLoading}
+              className="bg-slate-800/80 border-slate-600/50 text-white placeholder:text-slate-400"
             />
           </div>
         </CardContent>
-        
+
         <CardFooter className="flex flex-col space-y-4">
           <Button
             type="submit"
-            className="w-full"
+            className="w-full bg-gradient-to-r from-blue-600 to-violet-600 hover:from-blue-700 hover:to-violet-700 text-white"
             disabled={isLoading}
           >
             {isLoading ? (
@@ -160,12 +172,12 @@ export function SignUpCard() {
               </>
             )}
           </Button>
-          
-          <div className="text-center text-sm text-muted-foreground">
+
+          <div className="text-center text-sm text-slate-400">
             Already have an account?{" "}
             <Link
               href="/login"
-              className="text-primary hover:underline font-medium"
+              className="text-blue-400 hover:text-blue-300 hover:underline font-medium"
             >
               Sign in
             </Link>
