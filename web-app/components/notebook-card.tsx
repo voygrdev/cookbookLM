@@ -80,15 +80,15 @@ export default function NotebookCard({
   };
 
   return (
-    <Card className="group relative overflow-hidden transition-all duration-200 hover:shadow-lg hover:shadow-primary/10 hover:-translate-y-1 border-border/50 hover:border-border">
+    <Card className="group relative overflow-hidden transition-all duration-200 hover:shadow-lg hover:shadow-blue-500/10 hover:-translate-y-1 bg-slate-900/80 border-slate-700/50 backdrop-blur-sm hover:border-slate-600/70">
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="flex items-center space-x-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
-              <FileText className="h-4 w-4 text-primary" />
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-blue-500/20 to-violet-500/20">
+              <FileText className="h-4 w-4 text-blue-400" />
             </div>
             <div className="space-y-1">
-              <CardTitle className="text-base font-semibold line-clamp-1 group-hover:text-primary transition-colors">
+              <CardTitle className="text-base font-semibold line-clamp-1 text-white group-hover:text-blue-300 transition-colors">
                 {notebook.name}
               </CardTitle>
             </div>
@@ -99,24 +99,33 @@ export default function NotebookCard({
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-slate-800/50 text-slate-300"
               >
                 <MoreHorizontal className="h-4 w-4" />
                 <span className="sr-only">Open menu</span>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-40">
-              <DropdownMenuItem onClick={handleOpen} className="cursor-pointer">
+            <DropdownMenuContent
+              align="end"
+              className="w-40 bg-slate-800 border-slate-700"
+            >
+              <DropdownMenuItem
+                onClick={handleOpen}
+                className="cursor-pointer text-slate-200 hover:bg-slate-700/50 hover:text-white"
+              >
                 <ExternalLink className="mr-2 h-4 w-4" />
                 Open
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleEdit} className="cursor-pointer">
+              <DropdownMenuItem
+                onClick={handleEdit}
+                className="cursor-pointer text-slate-200 hover:bg-slate-700/50 hover:text-white"
+              >
                 <Edit className="mr-2 h-4 w-4" />
                 Edit
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={handleDelete}
-                className="cursor-pointer text-destructive focus:text-destructive"
+                className="cursor-pointer text-red-400 hover:bg-red-900/30 hover:text-red-300"
               >
                 <Trash2 className="mr-2 h-4 w-4" />
                 Delete
@@ -127,7 +136,7 @@ export default function NotebookCard({
       </CardHeader>
 
       <CardContent className="pb-3">
-        <CardDescription className="text-sm text-muted-foreground line-clamp-2">
+        <CardDescription className="text-sm text-slate-300 line-clamp-2">
           {notebook.content
             ? notebook.content.substring(0, 100) +
               (notebook.content.length > 100 ? "..." : "")
@@ -137,18 +146,21 @@ export default function NotebookCard({
 
       <CardFooter className="pt-0">
         <div className="flex w-full items-center justify-between">
-          <div className="flex items-center space-x-2 text-xs text-muted-foreground">
+          <div className="flex items-center space-x-2 text-xs text-slate-400">
             <Calendar className="h-3 w-3" />
             <span>Updated {formatDate(notebook.updatedAt)}</span>
           </div>
-          <Badge variant="secondary" className="text-xs">
+          <Badge
+            variant="secondary"
+            className="text-xs bg-slate-800/50 text-blue-300 border-slate-700/50"
+          >
             Notebook
           </Badge>
         </div>
       </CardFooter>
 
       {/* Subtle gradient overlay on hover */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-violet-500/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
     </Card>
   );
 }

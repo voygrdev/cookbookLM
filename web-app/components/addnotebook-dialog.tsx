@@ -76,11 +76,13 @@ export function DialogDemo({ open, onOpenChange, onSuccess }: DialogDemoProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px] bg-slate-900 border-slate-700">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
-            <DialogTitle className="text-2xl">Create New Notebook</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="text-2xl text-white">
+              Create New Notebook
+            </DialogTitle>
+            <DialogDescription className="text-slate-300">
               Give your notebook a name to get started organizing your
               documents.
             </DialogDescription>
@@ -88,19 +90,21 @@ export function DialogDemo({ open, onOpenChange, onSuccess }: DialogDemoProps) {
 
           <div className="grid gap-4 py-6">
             <div className="grid gap-2">
-              <Label htmlFor="name">Notebook Name</Label>
+              <Label htmlFor="name" className="text-slate-200">
+                Notebook Name
+              </Label>
               <Input
                 id="name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Enter a descriptive name..."
                 required
-                className="focus:ring-2 focus:ring-primary"
+                className="bg-slate-800/80 border-slate-600/50 text-white placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 disabled={isSubmitting}
               />
             </div>
             {error && (
-              <div className="text-sm text-destructive bg-destructive/10 p-3 rounded-md">
+              <div className="text-sm text-red-400 bg-red-900/20 border border-red-800/50 p-3 rounded-md">
                 {error}
               </div>
             )}
@@ -108,14 +112,19 @@ export function DialogDemo({ open, onOpenChange, onSuccess }: DialogDemoProps) {
 
           <DialogFooter className="gap-2">
             <DialogClose asChild>
-              <Button type="button" variant="outline" disabled={isSubmitting}>
+              <Button
+                type="button"
+                variant="outline"
+                disabled={isSubmitting}
+                className="border-slate-600/50 text-slate-200 hover:bg-slate-800"
+              >
                 Cancel
               </Button>
             </DialogClose>
             <Button
               type="submit"
               disabled={isSubmitting || !name.trim()}
-              className="min-w-[100px]"
+              className="min-w-[100px] bg-gradient-to-r from-blue-600 to-violet-600 hover:from-blue-700 hover:to-violet-700 text-white"
             >
               {isSubmitting ? "Creating..." : "Create Notebook"}
             </Button>
