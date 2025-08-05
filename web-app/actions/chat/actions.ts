@@ -3,15 +3,47 @@
 import { SYSTEM_PROMPT } from "@/lib/prompts";
 import { ChatGroq } from "@langchain/groq";
 import { ChatOllama } from "@langchain/ollama";
+import similaritySearch from "@/tools/similaritysearch";
 
 export async function sendChatMessage(
   message: string,
   conversationHistory: Array<{ role: string; content: string }>,
   provider: "groq" | "ollama" = "groq",
-  model: string = "deepseek-r1-distill-llama-70b"
+  model: string = "deepseek-r1-distill-llama-70b",
+  notebookId?: string
 ) {
   try {
     let llm;
+    let contextualMessage = message;
+
+    if (notebookId) {
+      try {
+        const searchResults = await similaritySearch(message, notebookId, 5);
+        if (searchResults.length > 0) {
+          const context = searchResults
+            .map(
+              (result, index) =>
+                `Document ${index + 1} (${result.metadata.filename}):\n${
+                  result.content
+                }`
+            )
+            .join("\n\n");
+
+          contextualMessage = `Based on the following relevant documents from your notebook:
+
+${context}
+
+User Question: ${message}
+
+Please answer the user's question using the provided context. If the context doesn't contain relevant information, please mention that and provide a general response.`;
+        }
+      } catch (searchError) {
+        console.warn(
+          "Similarity search failed, proceeding without context:",
+          searchError
+        );
+      }
+    }
 
     if (provider === "groq") {
       llm = new ChatGroq({
@@ -37,7 +69,7 @@ export async function sendChatMessage(
       ...conversationHistory,
       {
         role: "user",
-        content: message,
+        content: contextualMessage,
       },
     ];
 

@@ -67,6 +67,7 @@ const ModernChat = forwardRef<ModernChatRef, ModernChatProps>(
     const [ollamaModels, setOllamaModels] = useState<Array<{ name: string }>>(
       []
     );
+    const [executingTool, setExecutingTool] = useState<string | null>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const [uploadedFiles, setUploadedFiles] = useState<
       Array<{ name: string; url: string }>
@@ -85,6 +86,7 @@ const ModernChat = forwardRef<ModernChatRef, ModernChatProps>(
       },
     }));
 
+    // Auto-scroll to bottom when new messages arrive
     const scrollToBottom = () => {
       messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     };
@@ -214,7 +216,8 @@ const ModernChat = forwardRef<ModernChatRef, ModernChatProps>(
           inputMessage,
           conversationHistory,
           provider,
-          model
+          model,
+          notebookId
         );
 
         const responseContent =
@@ -271,26 +274,138 @@ const ModernChat = forwardRef<ModernChatRef, ModernChatProps>(
       }
     };
 
+    const addModelSwitchMessage = (newModel: string, newProvider: string) => {
+      const modelDisplayName =
+        newModel === "deepseek-r1-distill-llama-70b"
+          ? "DeepSeek R1 Distill Llama 70B"
+          : newModel === "openai/gpt-oss-120b"
+          ? "OpenAI GPT OSS 120B"
+          : newModel === "llama-3.3-70b-versatile"
+          ? "Llama 3.3 70B Versatile"
+          : newModel === "qwen/qwen3-32b"
+          ? "Qwen3 32B"
+          : newModel;
+
+      const switchMessage: Message = {
+        id: Date.now().toString(),
+        content: `Switched to ${modelDisplayName} (${newProvider.toUpperCase()})`,
+        role: "assistant",
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, switchMessage]);
+    };
+
     const handleProviderChange = (newProvider: "groq" | "ollama") => {
+      const oldModel = model;
       setProvider(newProvider);
+      let newModel = model;
+
       if (newProvider === "groq") {
-        setModel("deepseek-r1-distill-llama-70b");
+        newModel = "deepseek-r1-distill-llama-70b";
+        setModel(newModel);
       } else if (ollamaModels.length > 0) {
-        setModel(ollamaModels[0].name);
+        newModel = ollamaModels[0].name;
+        setModel(newModel);
       } else {
         // If no Ollama models are available, keep the current model but show a warning
-        setModel("no-models-found");
+        newModel = "no-models-found";
+        setModel(newModel);
         toast.warning("No Ollama models available", {
           description:
             "Please install Ollama models or switch back to Groq provider",
         });
+        return;
+      }
+
+      // Add model switch message if the model actually changed
+      if (oldModel !== newModel && newModel !== "no-models-found") {
+        addModelSwitchMessage(newModel, newProvider);
+      }
+    };
+
+    const handleToolAction = async (
+      tool: string,
+      messageContent: string,
+      messageId: string
+    ) => {
+      setExecutingTool(messageId);
+
+      try {
+        let toolPrompt = "";
+        switch (tool) {
+          case "regenerate":
+            toolPrompt =
+              "Please regenerate your previous response with a fresh perspective.";
+            break;
+          case "improve":
+            toolPrompt =
+              "Please improve your previous answer by making it more accurate, detailed, and helpful.";
+            break;
+          case "simplify":
+            toolPrompt =
+              "Please simplify your previous response to make it easier to understand.";
+            break;
+          case "expand":
+            toolPrompt =
+              "Please expand on your previous response with more details and examples.";
+            break;
+          default:
+            return;
+        }
+
+        const conversationHistory = messages.map((msg) => ({
+          role: msg.role,
+          content: msg.content,
+        }));
+
+        const response = await sendChatMessage(
+          toolPrompt,
+          conversationHistory,
+          provider,
+          model,
+          notebookId
+        );
+
+        const responseContent =
+          typeof response === "object" && response.content
+            ? String(response.content)
+            : typeof response === "string"
+            ? response
+            : JSON.stringify(response);
+
+        const thinking =
+          typeof response === "object" && response.thinking
+            ? String(response.thinking)
+            : "";
+
+        const newMessageId = Date.now().toString();
+        const assistantMessage: Message = {
+          id: newMessageId,
+          content: responseContent,
+          role: "assistant",
+          timestamp: new Date(),
+          thinking: thinking || undefined,
+        };
+
+        setMessages((prev) => [...prev, assistantMessage]);
+        toast.success(
+          `${tool.charAt(0).toUpperCase() + tool.slice(1)} completed`
+        );
+      } catch (error) {
+        console.error("Error executing tool:", error);
+        toast.error(`Failed to ${tool}`, {
+          description: "Please try again",
+        });
+      } finally {
+        setExecutingTool(null);
       }
     };
 
     const handleModelChange = (newModel: string) => {
       // Don't allow selection of the placeholder value
-      if (newModel !== "no-models-found") {
+      if (newModel !== "no-models-found" && newModel !== model) {
         setModel(newModel);
+        addModelSwitchMessage(newModel, provider);
       }
     };
 
@@ -483,15 +598,70 @@ const ModernChat = forwardRef<ModernChatRef, ModernChatProps>(
                       </div>
 
                       <div className="space-y-2 flex-1">
+                        {/* Tools dropdown for AI messages */}
+                        {message.role === "assistant" &&
+                          !message.content.includes("Switched to") && (
+                            <div className="flex justify-start">
+                              <Select
+                                onValueChange={(value) =>
+                                  handleToolAction(
+                                    value,
+                                    message.content,
+                                    message.id
+                                  )
+                                }
+                              >
+                                <SelectTrigger className="w-32 h-6 text-xs">
+                                  <SelectValue placeholder="Tools" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem
+                                    value="regenerate"
+                                    disabled={executingTool === message.id}
+                                  >
+                                    {executingTool === message.id ? "🔄" : "🔄"}{" "}
+                                    Regenerate
+                                  </SelectItem>
+                                  <SelectItem
+                                    value="improve"
+                                    disabled={executingTool === message.id}
+                                  >
+                                    ✨ Improve Answer
+                                  </SelectItem>
+                                  <SelectItem
+                                    value="simplify"
+                                    disabled={executingTool === message.id}
+                                  >
+                                    📝 Simplify
+                                  </SelectItem>
+                                  <SelectItem
+                                    value="expand"
+                                    disabled={executingTool === message.id}
+                                  >
+                                    📖 Expand Details
+                                  </SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          )}
+
                         <Card
                           className={`${
                             message.role === "user"
                               ? "bg-primary text-primary-foreground"
+                              : message.content.includes("Switched to")
+                              ? "bg-muted/50 border-muted"
                               : ""
                           }`}
                         >
                           <CardContent className="p-3">
-                            <div className="whitespace-pre-wrap text-sm">
+                            <div
+                              className={`whitespace-pre-wrap text-sm ${
+                                message.content.includes("Switched to")
+                                  ? "text-muted-foreground italic text-center"
+                                  : ""
+                              }`}
+                            >
                               {message.content}
                             </div>
                           </CardContent>
