@@ -1,6 +1,7 @@
 import ModernChat from "@/components/modern-chat";
 import Header from "@/components/header";
 import ModernUploadFiles from "@/components/modern-upload-files";
+import Notes from "@/components/notes";
 
 interface NotebookPageProps {
   params: Promise<{
@@ -28,6 +29,11 @@ export default async function NotebookSlug({ params }: NotebookPageProps) {
         {/* Main chat area */}
         <div className="flex-1 overflow-hidden">
           <ModernChat notebookId={notebookID} />
+        </div>
+
+        {/* Right sidebar for notes - 25% of screen width */}
+        <div className="w-1/4 min-w-[300px] border-l border-border flex flex-col overflow-hidden">
+          <Notes notebookId={notebookID} />
         </div>
       </div>
     </div>

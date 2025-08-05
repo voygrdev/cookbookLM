@@ -1,30 +1,75 @@
 "use server";
 
+import { SYSTEM_PROMPT } from "@/lib/prompts";
 import { ChatGroq } from "@langchain/groq";
+import { ChatOllama } from "@langchain/ollama";
+import similaritySearch from "@/tools/similaritysearch";
 
 export async function sendChatMessage(
   message: string,
-  conversationHistory: Array<{ role: string; content: string }>
+  conversationHistory: Array<{ role: string; content: string }>,
+  provider: "groq" | "ollama" = "groq",
+  model: string = "deepseek-r1-distill-llama-70b",
+  notebookId?: string
 ) {
   try {
-    const llm = new ChatGroq({
-      model: "deepseek-r1-distill-llama-70b",
-      temperature: 0.1,
-      maxTokens: undefined,
-      maxRetries: 2,
-      apiKey: process.env.GROQ_API_KEY,
-    });
+    let llm;
+    let contextualMessage = message;
+
+    if (notebookId) {
+      try {
+        const searchResults = await similaritySearch(message, notebookId, 5);
+        if (searchResults.length > 0) {
+          const context = searchResults
+            .map(
+              (result, index) =>
+                `Document ${index + 1} (${result.metadata.filename}):\n${
+                  result.content
+                }`
+            )
+            .join("\n\n");
+
+          contextualMessage = `Based on the following relevant documents from your notebook:
+
+${context}
+
+User Question: ${message}
+
+Please answer the user's question using the provided context. If the context doesn't contain relevant information, please mention that and provide a general response.`;
+        }
+      } catch (searchError) {
+        console.warn(
+          "Similarity search failed, proceeding without context:",
+          searchError
+        );
+      }
+    }
+
+    if (provider === "groq") {
+      llm = new ChatGroq({
+        model: model,
+        temperature: 0.1,
+        maxTokens: undefined,
+        maxRetries: 2,
+        apiKey: process.env.GROQ_API_KEY,
+      });
+    } else {
+      llm = new ChatOllama({
+        model: model,
+        baseUrl: "http://localhost:11434",
+        temperature: 0.1,
+      });
+    }
 
     const messages = [
       {
         role: "system",
-        content:
-          "You are a helpful assistant that can answer questions about the PDF documents that were uploaded and summarized. Use the context from the previous conversation to provide accurate and helpful responses.",
+        content: SYSTEM_PROMPT.prompt,
       },
       ...conversationHistory,
       {
         role: "user",
-        content: message,
+        content: contextualMessage,
       },
     ];
 
