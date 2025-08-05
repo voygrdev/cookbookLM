@@ -120,24 +120,24 @@ export default function UploadCard({ notebookId }: UploadCardProps) {
   });
 
   return (
-    <div className="flex flex-col bg-neutral-900 w-[25%]  m-5 rounded-lg p-2 relative">
+    <div className="flex flex-col bg-slate-950/70 w-[25%] m-5 rounded-lg p-2 relative backdrop-blur-sm border border-slate-700/50">
       <div className="mt-2">
         <div
           {...getRootProps()}
           className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors
               ${
                 isDragActive
-                  ? "border-blue-500 bg-blue-50/5"
-                  : "border-gray-600 hover:border-gray-500"
+                  ? "border-blue-500 bg-blue-900/20"
+                  : "border-slate-600/50 hover:border-slate-500/70"
               } ${isLoading ? "pointer-events-none opacity-50" : ""}`}
         >
           <input {...getInputProps()} disabled={isLoading} />
           {isLoading ? (
-            <p className="text-gray-300">Processing PDFs...</p>
+            <p className="text-slate-300">Processing PDFs...</p>
           ) : isDragActive ? (
-            <p className="text-gray-300">Drop PDF files here...</p>
+            <p className="text-slate-300">Drop PDF files here...</p>
           ) : (
-            <p className="text-gray-400">
+            <p className="text-slate-400">
               Drag & drop PDF files here, or click to select files
             </p>
           )}
@@ -146,7 +146,7 @@ export default function UploadCard({ notebookId }: UploadCardProps) {
         <div className="mt-4 space-y-6">
           {(files.length > 0 || results.length > 0) && (
             <div>
-              <h3 className="text-sm font-medium text-gray-300 mb-2">
+              <h3 className="text-sm font-medium text-slate-200 mb-2">
                 Processing Results:
               </h3>
               <ul className="space-y-2">
@@ -173,7 +173,7 @@ export default function UploadCard({ notebookId }: UploadCardProps) {
                       </p>
                     )}
                     {result.content && (
-                      <div className="mt-2 text-gray-400 text-xs max-h-20 overflow-y-auto">
+                      <div className="mt-2 text-slate-400 text-xs max-h-20 overflow-y-auto">
                         {result.content.substring(0, 200)}...
                       </div>
                     )}
@@ -183,7 +183,7 @@ export default function UploadCard({ notebookId }: UploadCardProps) {
                   files.map((file, index) => (
                     <li
                       key={`loading-${index}`}
-                      className="text-sm text-gray-400"
+                      className="text-sm text-slate-400"
                     >
                       {file.name} - Processing...
                     </li>
@@ -194,12 +194,12 @@ export default function UploadCard({ notebookId }: UploadCardProps) {
 
           {uploadedFiles.length > 0 && (
             <div>
-              <h3 className="text-sm font-medium text-gray-300 mb-2">
+              <h3 className="text-sm font-medium text-slate-200 mb-2">
                 Uploaded Files:
               </h3>
               <ul className="space-y-2">
                 {uploadedFiles.map((file, index) => (
-                  <li key={index} className="text-sm text-gray-400">
+                  <li key={index} className="text-sm text-slate-300">
                     <a
                       href={file.url}
                       target="_blank"

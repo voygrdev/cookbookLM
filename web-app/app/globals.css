@@ -2,14 +2,98 @@
 @tailwind components;
 @tailwind utilities;
 
-
-
 @layer base {
   :root {
-
     --background: 0 0% 100%;
 
-    --foreground: 240 10% 3.9%;
+    /* Hide scrollbar for chat messages */
+    .hide-scrollbar {
+      -ms-overflow-style: none; /* Internet Explorer 10+ */
+      scrollbar-width: none; /* Firefox */
+    }
+    .hide-scrollbar::-webkit-scrollbar {
+      display: none; /* Safari and Chrome */
+    }
+
+    /* Markdown styling improvements */
+    .prose {
+      color: inherit;
+      max-width: none;
+    }
+
+    .prose h1,
+    .prose h2,
+    .prose h3,
+    .prose h4,
+    .prose h5,
+    .prose h6 {
+      color: inherit;
+      margin-top: 0;
+    }
+
+    .prose p {
+      color: inherit;
+    }
+
+    .prose strong {
+      color: inherit;
+      font-weight: 600;
+    }
+
+    .prose code {
+      color: inherit;
+      background-color: hsl(var(--muted));
+      padding: 0.125rem 0.25rem;
+      border-radius: 0.25rem;
+      font-size: 0.875em;
+    }
+
+    .prose pre {
+      background-color: hsl(var(--muted));
+      color: inherit;
+      border-radius: 0.5rem;
+      padding: 1rem;
+      overflow-x: auto;
+    }
+
+    .prose blockquote {
+      border-left: 4px solid hsl(var(--border));
+      padding-left: 1rem;
+      font-style: italic;
+      color: hsl(var(--muted-foreground));
+    }
+
+    .prose ul,
+    .prose ol {
+      color: inherit;
+    }
+
+    .prose a {
+      color: hsl(var(--primary));
+      text-decoration: underline;
+    }
+
+    .prose a:hover {
+      text-decoration: none;
+    }
+
+    .prose table {
+      border-collapse: collapse;
+      width: 100%;
+    }
+
+    .prose th,
+    .prose td {
+      border: 1px solid hsl(var(--border));
+      padding: 0.5rem;
+      text-align: left;
+    }
+
+    .prose th {
+      background-color: hsl(var(--muted));
+      font-weight: 600;
+    }
+    ground: 240 10% 3.9%;
 
     --card: 0 0% 100%;
 
@@ -55,10 +139,9 @@
 
     --chart-5: 27 87% 67%;
 
-    --radius: 0.5rem
+    --radius: 0.5rem;
   }
   .dark {
-
     --background: 240 10% 3.9%;
 
     --foreground: 0 0% 98%;
@@ -105,11 +188,9 @@
 
     --chart-4: 280 65% 60%;
 
-    --chart-5: 340 75% 55%
+    --chart-5: 340 75% 55%;
   }
 }
-
-
 
 @layer base {
   * {
@@ -118,4 +199,44 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Hide scrollbar for chat messages */
+.hide-scrollbar {
+  -ms-overflow-style: none; /* Internet Explorer 10+ */
+  scrollbar-width: none; /* Firefox */
+}
+.hide-scrollbar::-webkit-scrollbar {
+  display: none; /* Safari and Chrome */
+}
+
+/* Hide scrollbar for upload documents and notes sections */
+.upload-scrollbar-hide {
+  -ms-overflow-style: none; /* Internet Explorer 10+ */
+  scrollbar-width: none; /* Firefox */
+}
+.upload-scrollbar-hide::-webkit-scrollbar {
+  display: none; /* Safari and Chrome */
+}
+
+/* Apply to all overflow containers */
+.overflow-y-auto::-webkit-scrollbar {
+  display: none;
+}
+.overflow-y-auto {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Specific hide for card content with max-height */
+.max-h-64::-webkit-scrollbar,
+.max-h-96::-webkit-scrollbar,
+.max-h-80::-webkit-scrollbar {
+  display: none;
+}
+.max-h-64,
+.max-h-96,
+.max-h-80 {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }

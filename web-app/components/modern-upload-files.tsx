@@ -199,7 +199,7 @@ export default function UploadFiles({
       "application/pdf": [".pdf"],
     },
     maxFiles: 5,
-    maxSize: 50 * 1024 * 1024, 
+    maxSize: 50 * 1024 * 1024,
   });
 
   const removeProcessingFile = (fileToRemove: File) => {
@@ -245,7 +245,7 @@ export default function UploadFiles({
   return (
     <div className="space-y-4">
       {/* Upload Area */}
-      <Card className="border-2 border-dashed transition-colors hover:border-primary/50">
+      <Card className="border-2 border-dashed border-slate-600/50 bg-slate-950/70 backdrop-blur-sm transition-colors hover:border-blue-500/50">
         <CardContent className="p-6">
           <div
             {...getRootProps()}
@@ -253,27 +253,31 @@ export default function UploadFiles({
               flex flex-col items-center justify-center space-y-4 p-8 rounded-lg transition-colors cursor-pointer
               ${
                 isDragActive
-                  ? "bg-primary/10 border-primary"
-                  : "hover:bg-muted/50"
+                  ? "bg-blue-500/10 border-blue-500"
+                  : "hover:bg-slate-800/50"
               }
             `}
           >
             <input {...getInputProps()} />
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
-              <Upload className="h-8 w-8 text-primary" />
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-blue-500/20">
+              <Upload className="h-8 w-8 text-blue-400" />
             </div>
             <div className="text-center space-y-2">
-              <h3 className="text-lg font-semibold">
+              <h3 className="text-lg font-semibold text-white">
                 {isDragActive ? "Drop files here" : "Upload PDF files"}
               </h3>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-slate-300">
                 Drag and drop your PDF files here, or click to browse
               </p>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-slate-400">
                 Maximum 5 files, 50MB each
               </p>
             </div>
-            <Button variant="outline" disabled={isLoading}>
+            <Button
+              variant="outline"
+              disabled={isLoading}
+              className="bg-transparent border-slate-600/50 text-slate-200 hover:bg-slate-800/50 hover:text-white hover:border-slate-500/70"
+            >
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -290,15 +294,15 @@ export default function UploadFiles({
         </CardContent>
       </Card>
 
-      {/* Processing Files */}
-      {processingFiles.length > 0 && (
-        <Card>
+      {/* Processing Files - Hidden as requested */}
+      {false && processingFiles.length > 0 && (
+        <Card className="bg-slate-950/70 border-slate-700/50 backdrop-blur-sm">
           <CardHeader>
-            <CardTitle className="text-lg flex items-center">
-              <FileText className="mr-2 h-5 w-5" />
+            <CardTitle className="text-lg flex items-center text-white">
+              <FileText className="mr-2 h-5 w-5 text-blue-400" />
               Processing Files
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="text-slate-300">
               Files being processed and uploaded
             </CardDescription>
           </CardHeader>
@@ -306,7 +310,7 @@ export default function UploadFiles({
             {processingFiles.map((processingFile, index) => (
               <div
                 key={index}
-                className="flex items-center space-x-4 p-4 border rounded-lg"
+                className="flex items-center space-x-4 p-4 border border-slate-700/50 bg-slate-900/50 rounded-lg"
               >
                 <div className="flex-shrink-0">
                   {getStatusIcon(processingFile.status)}
@@ -314,22 +318,25 @@ export default function UploadFiles({
 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between mb-2">
-                    <p className="text-sm font-medium truncate">
+                    <p className="text-sm font-medium truncate text-slate-200">
                       {processingFile.file.name}
                     </p>
-                    <Badge variant="outline" className="text-xs">
+                    <Badge
+                      variant="outline"
+                      className="text-xs border-slate-600 text-slate-300"
+                    >
                       {formatFileSize(processingFile.file.size)}
                     </Badge>
                   </div>
 
                   <div className="space-y-2">
-                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                    <div className="flex items-center justify-between text-xs text-slate-400">
                       <span className="capitalize">
                         {processingFile.status}
                       </span>
                       <span>{processingFile.progress}%</span>
                     </div>
-                    <div className="w-full bg-muted rounded-full h-2">
+                    <div className="w-full bg-slate-800 rounded-full h-2">
                       <div
                         className={`h-2 rounded-full transition-all duration-300 ${getStatusColor(
                           processingFile.status
@@ -340,7 +347,7 @@ export default function UploadFiles({
                   </div>
 
                   {processingFile.error && (
-                    <p className="text-xs text-red-500 mt-2">
+                    <p className="text-xs text-red-400 mt-2">
                       Error: {processingFile.error}
                     </p>
                   )}
@@ -350,7 +357,7 @@ export default function UploadFiles({
                   variant="ghost"
                   size="sm"
                   onClick={() => removeProcessingFile(processingFile.file)}
-                  className="flex-shrink-0"
+                  className="flex-shrink-0 text-slate-400 hover:text-slate-200 hover:bg-slate-800/50"
                 >
                   <X className="h-4 w-4" />
                 </Button>
@@ -362,13 +369,13 @@ export default function UploadFiles({
 
       {/* Uploaded Files */}
       {uploadedFiles.length > 0 && (
-        <Card>
+        <Card className="bg-slate-950/70 border-slate-700/50 backdrop-blur-sm">
           <CardHeader>
-            <CardTitle className="text-lg flex items-center">
-              <FileText className="mr-2 h-5 w-5" />
+            <CardTitle className="text-lg flex items-center text-white">
+              <FileText className="mr-2 h-5 w-5 text-blue-400" />
               Uploaded Files
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="text-slate-300">
               Successfully uploaded and processed files
             </CardDescription>
           </CardHeader>
@@ -377,17 +384,17 @@ export default function UploadFiles({
               {uploadedFiles.map((file, index) => (
                 <div
                   key={index}
-                  className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors"
+                  className="flex items-center justify-between p-3 border border-slate-700/50 bg-slate-900/50 rounded-lg hover:bg-slate-800/50 transition-colors"
                 >
                   <div className="flex items-center space-x-3 flex-1 min-w-0">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 flex-shrink-0">
-                      <FileText className="h-4 w-4 text-primary" />
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-500/20 flex-shrink-0">
+                      <FileText className="h-4 w-4 text-blue-400" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="font-medium text-sm truncate">
+                      <p className="font-medium text-sm truncate text-slate-200">
                         {file.name}
                       </p>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-xs text-slate-400">
                         {formatFileSize(file.size)} • Uploaded{" "}
                         {file.uploadedAt.toLocaleDateString()}
                       </p>
@@ -396,13 +403,23 @@ export default function UploadFiles({
 
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0 text-slate-400 hover:text-slate-200 hover:bg-slate-800/50"
+                      >
                         <MoreHorizontal className="h-4 w-4" />
                         <span className="sr-only">Open menu</span>
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-32">
-                      <DropdownMenuItem asChild>
+                    <DropdownMenuContent
+                      align="end"
+                      className="w-32 bg-slate-800 border-slate-600"
+                    >
+                      <DropdownMenuItem
+                        asChild
+                        className="text-slate-200 hover:bg-slate-700/50 hover:text-white focus:bg-slate-700/50 focus:text-white"
+                      >
                         <a
                           href={file.url}
                           target="_blank"
@@ -413,7 +430,10 @@ export default function UploadFiles({
                           View
                         </a>
                       </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
+                      <DropdownMenuItem
+                        asChild
+                        className="text-slate-200 hover:bg-slate-700/50 hover:text-white focus:bg-slate-700/50 focus:text-white"
+                      >
                         <a
                           href={file.url}
                           download={file.name}
