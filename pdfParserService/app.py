@@ -1,5 +1,23 @@
+from flask import Flask, request, jsonify
 import pdfplumber
 import pytesseract
+import os
+from werkzeug.utils import secure_filename
+
+app = Flask(__name__)
+
+# Configuration
+UPLOAD_FOLDER = 'uploads'
+ALLOWED_EXTENSIONS = {'pdf'}
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
+
+# Create upload directory if it doesn't exist
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 def format_table_cell(cell):
     if cell is None:
@@ -51,3 +69,45 @@ def convert_pdf_to_markdown(pdf_path):
                 markdown += f"### OCR Error\nFailed to perform OCR on page {i+1}: {str(e)}\n\n"
 
     return markdown
+
+@app.route('/health', methods=['GET'])
+def health_check():
+    return jsonify({'status': 'healthy'}), 200
+
+@app.route('/parse-pdf', methods=['POST'])
+def parse_pdf():
+    if 'file' not in request.files:
+        return jsonify({'error': 'No file provided'}), 400
+    
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({'error': 'No file selected'}), 400
+    
+    if file and allowed_file(file.filename):
+        filename = secure_filename(file.filename)
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        file.save(file_path)
+        
+        try:
+            markdown_content = convert_pdf_to_markdown(file_path)
+            if markdown_content is None:
+                return jsonify({'error': 'Failed to process PDF'}), 500
+            
+            # Clean up uploaded file
+            os.remove(file_path)
+            
+            return jsonify({
+                'markdown': markdown_content,
+                'filename': filename
+            }), 200
+            
+        except Exception as e:
+            # Clean up uploaded file in case of error
+            if os.path.exists(file_path):
+                os.remove(file_path)
+            return jsonify({'error': f'Processing failed: {str(e)}'}), 500
+    
+    return jsonify({'error': 'Invalid file type. Only PDF files are allowed.'}), 400
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000, debug=True)
