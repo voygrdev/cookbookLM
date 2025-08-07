@@ -31,6 +31,7 @@ import {
   RotateCcw,
   Sparkles,
   BookOpen,
+  Brain,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -40,6 +41,8 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 import { sendChatMessage } from "../actions/chat/actions";
 import { generateSummary } from "../actions/summary/actions";
+import { generateMindmap, MindmapData } from "../actions/mindmap/actions";
+import MindmapViewer from "./mindmap-viewer";
 import { getOllamaModels } from "../actions/models/actions";
 import { createClient } from "@/middlewares/supabase/client";
 import { toast } from "sonner";
@@ -66,6 +69,9 @@ const ModernChat = forwardRef<ModernChatRef, ModernChatProps>(
     const [inputMessage, setInputMessage] = useState("");
     const [isChatLoading, setIsChatLoading] = useState(false);
     const [isSummaryLoading, setIsSummaryLoading] = useState(false);
+    const [isMindmapLoading, setIsMindmapLoading] = useState(false);
+    const [mindmapData, setMindmapData] = useState<MindmapData | null>(null);
+    const [showMindmap, setShowMindmap] = useState(false);
     const [typingMessage, setTypingMessage] = useState<string>("");
     const [isTyping, setIsTyping] = useState(false);
     const [showThinking, setShowThinking] = useState<Record<string, boolean>>(
@@ -83,7 +89,6 @@ const ModernChat = forwardRef<ModernChatRef, ModernChatProps>(
       Array<{ name: string; url: string }>
     >([]);
 
-    // Loading words that rotate while generating response
     const loadingWords = ["Thinking", "Generating", "Processing", "Analyzing"];
 
     useImperativeHandle(ref, () => ({
@@ -99,7 +104,6 @@ const ModernChat = forwardRef<ModernChatRef, ModernChatProps>(
       },
     }));
 
-    // Auto-scroll to bottom when new messages arrive
     const scrollToBottom = () => {
       messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     };
@@ -108,7 +112,6 @@ const ModernChat = forwardRef<ModernChatRef, ModernChatProps>(
       scrollToBottom();
     }, [messages, isTyping, typingMessage]);
 
-    // Rotate loading words while chat is loading
     useEffect(() => {
       if (isChatLoading) {
         const interval = setInterval(() => {
@@ -183,7 +186,7 @@ const ModernChat = forwardRef<ModernChatRef, ModernChatProps>(
       setTypingMessage("");
 
       let index = 0;
-      const typingSpeed = 2; // Much faster typing speed
+      const typingSpeed = 2; 
 
       const typeNextChar = () => {
         if (index < text.length) {
@@ -330,7 +333,6 @@ const ModernChat = forwardRef<ModernChatRef, ModernChatProps>(
         newModel = ollamaModels[0].name;
         setModel(newModel);
       } else {
-        // If no Ollama models are available, keep the current model but show a warning
         newModel = "no-models-found";
         setModel(newModel);
         toast.warning("No Ollama models available", {
@@ -340,7 +342,6 @@ const ModernChat = forwardRef<ModernChatRef, ModernChatProps>(
         return;
       }
 
-      // Add model switch message if the model actually changed
       if (oldModel !== newModel && newModel !== "no-models-found") {
         addModelSwitchMessage(newModel, newProvider);
       }
@@ -469,6 +470,34 @@ const ModernChat = forwardRef<ModernChatRef, ModernChatProps>(
       }
     };
 
+    const handleMindmap = async () => {
+      if (isMindmapLoading || uploadedFiles.length === 0) return;
+
+      if (model === "no-models-found") {
+        toast.error("No valid model selected", {
+          description: "Please select a valid model or install Ollama models.",
+        });
+        return;
+      }
+
+      setIsMindmapLoading(true);
+
+      try {
+        const result = await generateMindmap(notebookId, provider, model);
+        setMindmapData(result);
+        setShowMindmap(true);
+        toast.success("Mindmap generated successfully");
+      } catch (error) {
+        console.error("Error generating mindmap:", error);
+        toast.error("Failed to generate mindmap", {
+          description:
+            error instanceof Error ? error.message : "Unknown error occurred",
+        });
+      } finally {
+        setIsMindmapLoading(false);
+      }
+    };
+
     const toggleThinking = (messageId: string) => {
       setShowThinking((prev) => ({
         ...prev,
@@ -483,7 +512,6 @@ const ModernChat = forwardRef<ModernChatRef, ModernChatProps>(
       });
     };
 
-    // Company logo components using SVG files
     const GroqLogo = () => (
       <Image
         src="/groq.svg"
@@ -672,20 +700,37 @@ const ModernChat = forwardRef<ModernChatRef, ModernChatProps>(
               </Select>
 
               {uploadedFiles.length > 0 && (
-                <Button
-                  onClick={handleSummary}
-                  disabled={isSummaryLoading || model === "no-models-found"}
-                  variant="outline"
-                  size="default"
-                  className="flex items-center space-x-2 h-9 px-3 bg-transparent border-slate-600/50 text-slate-200 hover:bg-slate-800/50 hover:text-white hover:border-slate-500/70"
-                >
-                  {isSummaryLoading ? (
-                    <Loader2 className="h-3 w-3 animate-spin" />
-                  ) : (
-                    <FileText className="h-3 w-3" />
-                  )}
-                  <span>Summary</span>
-                </Button>
+                <>
+                  <Button
+                    onClick={handleSummary}
+                    disabled={isSummaryLoading || model === "no-models-found"}
+                    variant="outline"
+                    size="default"
+                    className="flex items-center space-x-2 h-9 px-3 bg-transparent border-slate-600/50 text-slate-200 hover:bg-slate-800/50 hover:text-white hover:border-slate-500/70"
+                  >
+                    {isSummaryLoading ? (
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                    ) : (
+                      <FileText className="h-3 w-3" />
+                    )}
+                    <span>Summary</span>
+                  </Button>
+
+                  <Button
+                    onClick={handleMindmap}
+                    disabled={isMindmapLoading || model === "no-models-found"}
+                    variant="outline"
+                    size="default"
+                    className="flex items-center space-x-2 h-9 px-3 bg-transparent border-slate-600/50 text-slate-200 hover:bg-slate-800/50 hover:text-white hover:border-slate-500/70"
+                  >
+                    {isMindmapLoading ? (
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                    ) : (
+                      <Brain className="h-3 w-3" />
+                    )}
+                    <span>Mindmap</span>
+                  </Button>
+                </>
               )}
             </div>
           </div>
@@ -1092,6 +1137,15 @@ const ModernChat = forwardRef<ModernChatRef, ModernChatProps>(
             </p>
           )}
         </div>
+
+        {/* Mindmap Viewer Modal */}
+        {mindmapData && (
+          <MindmapViewer
+            mindmapData={mindmapData}
+            isOpen={showMindmap}
+            onClose={() => setShowMindmap(false)}
+          />
+        )}
       </div>
     );
   }
