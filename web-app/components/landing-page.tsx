@@ -244,7 +244,7 @@ const LandingPage = () => {
             </Badge>
 
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 bg-gradient-to-r from-slate-200 via-blue-300 to-violet-400 bg-clip-text text-transparent leading-tight">
-              Chat with Your
+              Interact with your
               <span className="bg-gradient-to-r from-blue-400 to-violet-500 bg-clip-text text-transparent">
                 {" "}
                 Documents
