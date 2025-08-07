@@ -1,0 +1,249 @@
+version: "3.8"
+
+services:
+  supabase-db:
+    image: supabase/postgres:15.6.1.118
+    container_name: supabase-db
+    restart: unless-stopped
+    ports:
+      - "54322:5432"
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: your-super-secret-and-long-postgres-password
+      POSTGRES_HOST_AUTH_METHOD: trust
+    volumes:
+      - supabase-db-data:/var/lib/postgresql/data
+      - ./infrastructure/supabase/migrations:/docker-entrypoint-initdb.d
+    command: postgres -c config_file=/etc/postgresql/postgresql.conf
+
+  supabase-studio:
+    image: supabase/studio:20250101-3b32c4a
+    container_name: supabase-studio
+    restart: unless-stopped
+    ports:
+      - "54323:3000"
+    environment:
+      SUPABASE_URL: http://supabase-kong:8000
+      SUPABASE_REST_URL: http://localhost:54321/rest/v1/
+      SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0
+      SUPABASE_SERVICE_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU
+      SUPABASE_SECRET: your-super-secret-jwt-token-with-at-least-32-characters-long
+    depends_on:
+      - supabase-kong
+
+  supabase-kong:
+    image: kong:2.8.1
+    container_name: supabase-kong
+    restart: unless-stopped
+    ports:
+      - "54321:8000/tcp"
+      - "54444:8443/tcp"
+    environment:
+      KONG_DATABASE: "off"
+      KONG_DECLARATIVE_CONFIG: /var/lib/kong/kong.yml
+      KONG_DNS_ORDER: LAST,A,CNAME
+      KONG_PLUGINS: request-transformer,cors,key-auth,acl,basic-auth
+      KONG_NGINX_PROXY_PROXY_BUFFER_SIZE: 160k
+      KONG_NGINX_PROXY_PROXY_BUFFERS: 64 160k
+    volumes:
+      - ./infrastructure/supabase/kong.yml:/var/lib/kong/kong.yml:ro
+    depends_on:
+      - supabase-auth
+      - supabase-rest
+      - supabase-realtime
+      - supabase-storage
+
+  supabase-auth:
+    image: supabase/gotrue:v2.158.1
+    container_name: supabase-auth
+    restart: unless-stopped
+    environment:
+      GOTRUE_API_HOST: 0.0.0.0
+      GOTRUE_API_PORT: 9999
+      API_EXTERNAL_URL: http://localhost:54321
+      GOTRUE_DB_DRIVER: postgres
+      GOTRUE_DB_DATABASE_URL: postgres://supabase_auth_admin:root@supabase-db:5432/postgres
+      GOTRUE_SITE_URL: http://localhost:3000
+      GOTRUE_URI_ALLOW_LIST: ""
+      GOTRUE_DISABLE_SIGNUP: false
+      GOTRUE_JWT_ADMIN_ROLES: service_role
+      GOTRUE_JWT_AUD: authenticated
+      GOTRUE_JWT_DEFAULT_GROUP_NAME: authenticated
+      GOTRUE_JWT_EXP: 3600
+      GOTRUE_JWT_SECRET: your-super-secret-jwt-token-with-at-least-32-characters-long
+      GOTRUE_EXTERNAL_EMAIL_ENABLED: true
+      GOTRUE_MAILER_AUTOCONFIRM: false
+      GOTRUE_MAILER_SECURE_EMAIL_CHANGE_ENABLED: true
+      GOTRUE_MAILER_URLPATHS_INVITE: "/auth/v1/verify"
+      GOTRUE_MAILER_URLPATHS_CONFIRMATION: "/auth/v1/verify"
+      GOTRUE_MAILER_URLPATHS_RECOVERY: "/auth/v1/verify"
+      GOTRUE_MAILER_URLPATHS_EMAIL_CHANGE: "/auth/v1/verify"
+      GOTRUE_EXTERNAL_PHONE_ENABLED: true
+      GOTRUE_SMS_AUTOCONFIRM: true
+    depends_on:
+      - supabase-db
+
+  supabase-rest:
+    image: postgrest/postgrest:v12.0.1
+    container_name: supabase-rest
+    restart: unless-stopped
+    environment:
+      PGRST_DB_URI: postgres://authenticator:root@supabase-db:5432/postgres
+      PGRST_DB_SCHEMAS: public,storage,graphql_public
+      PGRST_DB_ANON_ROLE: anon
+      PGRST_JWT_SECRET: your-super-secret-jwt-token-with-at-least-32-characters-long
+      PGRST_DB_USE_LEGACY_GUCS: "false"
+      PGRST_APP_SETTINGS_JWT_SECRET: your-super-secret-jwt-token-with-at-least-32-characters-long
+      PGRST_APP_SETTINGS_JWT_EXP: 3600
+    depends_on:
+      - supabase-db
+
+  supabase-realtime:
+    image: supabase/realtime:v2.28.32
+    container_name: supabase-realtime
+    restart: unless-stopped
+    environment:
+      PORT: 4000
+      DB_HOST: supabase-db
+      DB_PORT: 5432
+      DB_USER: supabase_admin
+      DB_PASSWORD: root
+      DB_NAME: postgres
+      DB_AFTER_CONNECT_QUERY: "SET search_path TO _realtime"
+      DB_ENC_KEY: supabaserealtime
+      API_JWT_SECRET: your-super-secret-jwt-token-with-at-least-32-characters-long
+      FLY_ALLOC_ID: fly123
+      FLY_APP_NAME: realtime
+      SECRET_KEY_BASE: UpNVntn3cDxHJpq99YMc1T1AQgQpc8kfYTuRgBiYa15BLrx8etQoXz3gZv1/u2oq
+      ERL_AFLAGS: -proto_dist inet_tcp
+      ENABLE_TAILSCALE: "false"
+      DNS_NODES: "''"
+    depends_on:
+      - supabase-db
+    command: >
+      sh -c "/app/bin/migrate && /app/bin/realtime eval 'Realtime.Release.seeds(Realtime.Repo)' && /app/bin/server"
+
+  supabase-storage:
+    image: supabase/storage-api:v1.0.6
+    container_name: supabase-storage
+    restart: unless-stopped
+    environment:
+      ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0
+      SERVICE_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU
+      POSTGREST_URL: http://supabase-rest:3000
+      PGRST_JWT_SECRET: your-super-secret-jwt-token-with-at-least-32-characters-long
+      DATABASE_URL: postgres://supabase_storage_admin:root@supabase-db:5432/postgres
+      FILE_SIZE_LIMIT: 52428800
+      STORAGE_BACKEND: file
+      FILE_STORAGE_BACKEND_PATH: /var/lib/storage
+      TENANT_ID: stub
+      REGION: stub
+      GLOBAL_S3_BUCKET: stub
+      ENABLE_IMAGE_TRANSFORMATION: "true"
+      IMGPROXY_URL: http://supabase-imgproxy:5001
+    volumes:
+      - supabase-storage-data:/var/lib/storage
+    depends_on:
+      - supabase-db
+      - supabase-rest
+
+  supabase-imgproxy:
+    image: darthsim/imgproxy:v3.8.0
+    container_name: supabase-imgproxy
+    restart: unless-stopped
+    environment:
+      IMGPROXY_BIND: 0.0.0.0:5001
+      IMGPROXY_LOCAL_FILESYSTEM_ROOT: /
+      IMGPROXY_USE_ETAG: "true"
+      IMGPROXY_ENABLE_WEBP_DETECTION: "true"
+    volumes:
+      - supabase-storage-data:/var/lib/storage:ro
+
+  mongodb:
+    image: mongo:7.0
+    container_name: mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password
+      MONGO_INITDB_DATABASE: cookbookdb
+    volumes:
+      - mongodb-data:/data/db
+      - mongodb-config:/data/configdb
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    restart: unless-stopped
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-data:/root/.ollama
+    environment:
+      - OLLAMA_HOST=0.0.0.0:11434
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+  web-app:
+    build:
+      context: ./web-app
+      dockerfile: Dockerfile
+    container_name: web-app
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - NEXT_PUBLIC_SUPABASE_URL=http://localhost:54321
+      - NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0
+      - SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU
+      - MONGODB_URI=mongodb://admin:password@mongodb:27017/cookbookdb?authSource=admin
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - PDF_PARSER_URL=http://pdf-parser:5000
+    volumes:
+      - ./web-app:/app
+      - /app/node_modules
+    depends_on:
+      - supabase-kong
+      - mongodb
+      - ollama
+      - pdf-parser
+
+  pdf-parser:
+    build:
+      context: ./pdfParserService
+      dockerfile: Dockerfile
+    container_name: pdf-parser
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=development
+      - FLASK_DEBUG=1
+    volumes:
+      - ./pdfParserService:/app
+      - pdf-uploads:/app/uploads
+      - pdf-images:/app/images
+    depends_on:
+      - mongodb
+
+volumes:
+  supabase-db-data:
+  supabase-storage-data:
+  mongodb-data:
+  mongodb-config:
+  ollama-data:
+  pdf-uploads:
+  pdf-images:
+
+networks:
+  default:
+    driver: bridge
