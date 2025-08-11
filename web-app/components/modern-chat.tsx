@@ -335,10 +335,6 @@ const ModernChat = forwardRef<ModernChatRef, ModernChatProps>(
       } else {
         newModel = "no-models-found";
         setModel(newModel);
-        toast.warning("No Ollama models available", {
-          description:
-            "Please install Ollama models or switch back to Groq provider",
-        });
         return;
       }
 

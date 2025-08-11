@@ -17,6 +17,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import type { User } from "@supabase/supabase-js";
 import { ThemeToggle } from "@/components/theme-toggle";
+import Link from "next/link";
 
 export default function Header() {
   const router = useRouter();
@@ -65,11 +66,13 @@ export default function Header() {
     <header className="sticky top-0 z-50 w-full border-b border-slate-700/50 bg-slate-950/95 backdrop-blur supports-[backdrop-filter]:bg-slate-950/60">
       <div className="flex h-16 items-center justify-between px-6">
         <div className="flex items-center space-x-4">
-          <div className="flex items-center space-x-2">
+          <div className="flex  space-x-2">
+          <Link href="/" className="flex flex-row space-x-2 items-center">
             <BookOpen className="h-6 w-6 text-blue-400" />
             <h1 className="text-xl font-bold bg-gradient-to-r from-blue-400 to-violet-500 bg-clip-text text-transparent">
               CookbookLM
             </h1>
+          </Link>
           </div>
         </div>
 

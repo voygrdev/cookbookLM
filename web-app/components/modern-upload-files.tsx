@@ -181,9 +181,6 @@ export default function UploadFiles({
             )
           );
 
-          toast.error("Processing failed", {
-            description: `Failed to process ${processingFile.file.name}. Please try again.`,
-          });
         }
       }
 
