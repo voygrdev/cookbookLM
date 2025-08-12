@@ -288,17 +288,13 @@ GROQ_API_KEY=""
 
 #### Ollama (Local Processing)
 
-- **Llama 3.2** - General purpose conversational AI
-- **Qwen 2.5** - Multilingual and coding capabilities
-- **DeepSeek Coder** - Specialized for code analysis
-- **Mistral** - Efficient reasoning and analysis
 - **Custom Models** - Load any GGUF model
 
 #### Groq (Cloud Processing)
 
-- **Llama 3.1** - Latest Meta models with high speed
-- **Mixtral 8x7B** - Mixture of experts architecture
-- **Gemma 2** - Google's open models
+- **OpenAI OSS 120B** - Latest OpenAI OSS models with high speed
+- **Deepseek R1** - Mixture of experts architecture
+- **Qwen 2.5** - Google's open models
 - **High-Speed Inference** - Optimized for real-time responses
 
 ### Core Features
